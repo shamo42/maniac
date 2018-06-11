@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            app:startDestination="@id/launcher_home">
+    <fragment
+        android:id="@+id/launcher_home"
+        android:name="com.kyoapps.maniac.ui.MainThreadsFrag"
+        android:label="@string/home"
+        tools:layout="@layout/main_threads_frag">
+
+
+    <deepLink app:uri="maniac-forum.de/forum/pxmboard.php{mode}"/></fragment>
+
+    <!--fragment
+        android:id="@+id/mainRepliesFrag"
+        android:name="com.kyoapps.maniac.ui.MainRepliesFrag"
+        android:label="Replies"
+        tools:layout="@layout/main_replies_frag" /-->
+
+
+</navigation>

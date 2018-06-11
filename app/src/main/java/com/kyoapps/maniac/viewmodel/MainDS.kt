@@ -1,0 +1,136 @@
+package com.kyoapps.maniac.viewmodel
+
+import android.arch.paging.DataSource
+import android.util.Log
+import com.kyoapps.maniac.api.ManiacApiLEGACY
+import com.kyoapps.maniac.functions.FuncParse
+import com.kyoapps.maniac.helpers.classes.LoadRequestItem
+import com.kyoapps.maniac.room.dao.ReplyDao
+import com.kyoapps.maniac.room.dao.ThreadDao
+import com.kyoapps.maniac.room.entities.ReplyEnt
+import com.kyoapps.maniac.room.entities.ThreadEnt
+import io.reactivex.Flowable
+import io.reactivex.Single
+
+class MainDS(private val maniacApiLEGACY: ManiacApiLEGACY, private val threadDao: ThreadDao, private val replyDao: ReplyDao) {
+
+    // todo replace legacy code
+    private fun getThreads(brdid: Short): Single<List<ThreadEnt>> {
+        Log.d(TAG, "getThreads")
+        return maniacApiLEGACY.getThreads("threadlist", brdid)
+                .map { FuncParse.parseThreadsLegacy(it, brdid) }
+    }
+
+    fun fetchThreadsIntoDb(brdid: Short): Single<Boolean> {
+        return getThreads(brdid)
+                .map {
+                    val oldThrdMap: HashMap<Int, ThreadEnt> = HashMap(it.size)
+                    threadDao.getAll().forEach { oldThrdMap[it.thrdid] = it }
+                    it.forEach {
+                        if (oldThrdMap.containsKey(it.thrdid)) {
+                            it.hide = oldThrdMap[it.thrdid]!!.hide
+                            it.oldReplies = oldThrdMap[it.thrdid]!!.totalReplies
+                        }
+                    }
+                    threadDao.delete(brdid)
+                    threadDao.insertAll(it)
+                }
+                .map { threadDao.count(brdid) > 0 }
+    }
+
+    fun getThreadsFromDb(brdid: Short): Flowable<List<ThreadEnt>> {
+        return threadDao.getThreadsOrderedRx(brdid)
+    }
+
+    // todo replace legacy code
+    private fun getReplies(brdid: Short, thrdid: Int): Single<List<ReplyEnt>> {
+        return maniacApiLEGACY.getReplies("thread", brdid, thrdid)
+                .map { FuncParse.parseRepliesLegacy(it, brdid, thrdid) }
+    }
+
+    fun fetchRepliesIntoDb(brdid: Short, thrdid: Int): Single<Boolean> {
+        return getReplies(brdid, thrdid)
+                .map {
+                    val oldReplyList= replyDao.getReadTuples(thrdid).map { it.msgid }
+                    it.forEach { if (oldReplyList.contains(it.msgid)) it.clicked = true  }
+                    replyDao.delete(thrdid)
+                    replyDao.insertAll(it)
+                }
+                .map {
+                    val count = replyDao.count(thrdid)
+                    Log.d(TAG, "fetchRepliesIntoDb($brdid, $thrdid) count: $count")
+                    count > 0
+                }
+    }
+
+    fun getRepliesFromDb(thrdid: Int): Flowable<List<ReplyEnt>> {
+        return  replyDao.getRepliesOrderedRx(thrdid)
+    }
+
+    fun getRepliesPagedFromDb(thrdid: Int):  DataSource.Factory<Int, ReplyEnt> {
+        return replyDao.getRepliesOrderedPaged(thrdid)
+    }
+
+    // todo replace legacy code
+    fun getMessage(brdid: Short, msgid: Int): Flowable<String> {
+        Log.i(TAG, "getMessage($brdid, $msgid)")
+        return maniacApiLEGACY.getMessage("message", brdid, msgid)
+                .map { FuncParse.parseMessageLegacy(it, true, true, true, 500) }
+                .toFlowable()
+                //.map { FuncParse.formatHtmlLegacy(it,) }
+    }
+
+
+    fun getThrdid(brdid: Short, msgid: Int): Single<LoadRequestItem> {
+        return maniacApiLEGACY.getMessage("message", brdid, msgid)
+                .map { FuncParse.parseMessageForThrdid(it) }
+                .flatMap {
+                    if (it == -1) Single.error(Throwable("parse error: getThrdid($brdid, $msgid)"))
+                    else Single.just(LoadRequestItem(brdid, it, msgid))
+                }
+    }
+
+    fun parseManiacUrl(url: String): Single<LoadRequestItem> {
+
+        // ?mode=message&brdid=1&msgid=4314202
+        // ?mode=message&brdid=1&msgid=3525415
+        // ?mode=messagelist&brdid=1&thrdid=163008
+        val brdidString = "brdid="
+        val msgidString = "msgid="
+        val thrdidString = "thrdid="
+
+
+        Log.d(TAG, "PARSE_ start $url")
+
+        return Single.just(url)
+                .flatMap {
+                    if (it.contains("?mode=message") && it.contains(brdidString) && it.contains(msgidString)
+                    || (it.contains("?mode=messagelist") && it.contains(brdidString) && it.contains(thrdidString))) {
+                        Single.just(it)
+                    } else  {Single.error(Throwable("parse error: parseManiacUrl($url) ")) }
+                }
+                .flatMap {
+                    val brdidIndex = it.indexOf(brdidString)
+                    val brdid = it.substring(brdidIndex + brdidString.length, it.indexOf("&", brdidIndex)).toShortOrNull()
+
+                    if (it.contains("?mode=messagelist")) {
+                        val thrdidIndex = it.indexOf(thrdidString)
+                        val thrdid = it.substring(thrdidIndex + thrdidString.length).toIntOrNull()
+                        if (brdid == null || thrdid == null) Single.error(Throwable("parse error: parseManiacUrl($url) "))
+                        else Single.just(LoadRequestItem(brdid, thrdid, null))
+                    } else {
+                        val msgidIndex = it.indexOf(msgidString)
+                        val msgid = it.substring(msgidIndex + msgidString.length).toIntOrNull()
+                        if (brdid == null || msgid == null) Single.error(Throwable("parse error: parseManiacUrl($url) "))
+                        else getThrdid(brdid, msgid)
+                    }
+                }
+    }
+
+
+    companion object {
+        const val TAG = "MainDS"
+    }
+
+
+}

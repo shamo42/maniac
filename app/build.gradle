@@ -1,0 +1,92 @@
+apply plugin: "com.android.application"
+apply plugin: "kotlin-android"
+apply plugin: "kotlin-kapt"
+apply plugin: "androidx.navigation.safeargs"
+
+android {
+    compileSdkVersion 27
+    defaultConfig {
+        applicationId "com.kyoapps.maniac"
+        minSdkVersion 19
+        targetSdkVersion 27
+        versionCode 1
+        versionName "3.0.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        }
+        debug {
+            minifyEnabled false
+            testCoverageEnabled false
+        }
+    }
+    dataBinding {
+        enabled = true
+    }
+    productFlavors {
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+}
+
+dependencies {
+
+    // Kotlin
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlinVersion"
+
+    implementation "com.android.support:design:$rootProject.supportLibVersion"
+    implementation "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
+    implementation "com.android.support:cardview-v7:$rootProject.supportLibVersion"
+    implementation "com.android.support:recyclerview-v7:$rootProject.supportLibVersion"
+    implementation "com.android.support.constraint:constraint-layout:$rootProject.constraintLayoutVersion"
+
+    // Navigation
+    implementation "android.arch.navigation:navigation-fragment:$rootProject.navigationVersion"
+    implementation "android.arch.navigation:navigation-ui:$rootProject.navigationVersion"
+
+    // Paging
+    implementation "android.arch.paging:runtime:$rootProject.pagingVersion"
+
+    // Architecture components
+    implementation "android.arch.lifecycle:runtime:$rootProject.architectureComponentsVersion"
+    implementation "android.arch.lifecycle:extensions:$rootProject.architectureComponentsVersion"
+    implementation "android.arch.lifecycle:reactivestreams:$rootProject.architectureComponentsVersion"
+    kapt "android.arch.lifecycle:compiler:$rootProject.architectureComponentsVersion"
+    implementation "android.arch.persistence.room:runtime:$rootProject.architectureComponentsVersionRoom"
+    kapt "android.arch.persistence.room:compiler:$rootProject.architectureComponentsVersionRoom"
+    implementation "android.arch.persistence.room:rxjava2:$rootProject.architectureComponentsVersionRoom"
+
+    // RxJava
+    implementation "io.reactivex.rxjava2:rxandroid:$rootProject.rxandroidVersion"
+    implementation "io.reactivex.rxjava2:rxjava:$rootProject.rxjavaVersion"
+    //implementation "com.jakewharton.rxrelay2:rxrelay:$rootProject.rxRelayVersion"
+    //implementation "com.jakewharton.rx2:replaying-share:2.0.1"
+
+
+    // Json
+    implementation "com.squareup.moshi:moshi:$rootProject.moshiVersion"
+    implementation "com.squareup.retrofit2:converter-moshi:$rootProject.moshiRetrofitConverterVersion"
+
+    // Network
+    implementation "com.squareup.retrofit2:retrofit:$rootProject.retrofitVersion"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:$rootProject.retrofitVersion"
+    implementation "com.squareup.okhttp3:okhttp:$rootProject.okhttpVersion"
+
+    // Dagger 2
+    implementation "com.google.dagger:dagger:$rootProject.daggerVersion"
+    kapt "com.google.dagger:dagger-compiler:$rootProject.daggerVersion"
+    implementation "com.google.dagger:dagger-android-support:$rootProject.daggerVersion"
+    kapt "com.google.dagger:dagger-android-processor:$rootProject.daggerVersion"
+
+    // Android State
+    //implementation "com.evernote:android-state:$rootProject.androidState"
+    //kapt "com.evernote:android-state-processor:$rootProject.androidState"
+
+}

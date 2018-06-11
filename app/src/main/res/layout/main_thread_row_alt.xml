@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:descendantFocusability="blocksDescendants"
+    android:paddingLeft="5dp"
+    android:paddingRight="10dp"
+    android:id="@+id/main_row_item_pane"
+    android:paddingTop="1dp"
+    android:paddingBottom="1dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?attr/selectableItemBackground" >
+
+
+
+    <TextView
+        android:id="@+id/tv_thread_row_title"
+        android:layout_height="match_parent"
+        android:textIsSelectable="false"
+        android:layout_width="0dp"
+        android:textSize="15sp"
+        android:minLines="2"
+        android:layout_weight="1"
+        android:gravity="center_vertical" />
+
+
+    <TextView
+        android:id="@+id/tv_thread_row_replycount"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:textIsSelectable="false"
+        android:textSize="13sp"
+        android:singleLine="true"
+        android:gravity="bottom"
+        android:layout_marginLeft="5dp"/>
+
+</LinearLayout>
+

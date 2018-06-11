@@ -1,0 +1,51 @@
+buildscript {
+
+    ext {
+        kotlinVersion = '1.2.41'
+    }
+    repositories {
+        jcenter()
+        google()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.2.0-alpha17'
+        classpath 'android.arch.navigation:navigation-safe-args-gradle-plugin:1.0.0-alpha02'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        google()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+ext {
+    supportLibVersion = "27.1.1"
+    navigationVersion = "1.0.0-alpha02"
+    pagingVersion = "1.0.0"
+    constraintLayoutVersion = "1.1.1"
+    architectureComponentsVersion = "1.1.1"
+    architectureComponentsVersionRoom = "1.1.1-rc1"
+
+    daggerVersion = "2.15"
+    rxjavaVersion = "2.1.12"
+    rxandroidVersion = "2.0.2"
+    retrofitVersion = '2.4.0'
+    okhttpVersion = '3.10.0'
+    moshiVersion = "1.6.0"
+    moshiRetrofitConverterVersion = '2.3.0'
+
+    androidState = '1.2.1'
+
+    runnerVersion = "0.5"
+    rulesVersion = "0.5"
+    espressoVersion = "2.2.2"
+}

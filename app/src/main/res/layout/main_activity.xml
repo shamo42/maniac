@@ -1,0 +1,67 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <android.support.v4.widget.SlidingPaneLayout
+        android:id="@+id/sliding_pane_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!--The first child view becomes the left pane. When the combined
+             desired width (expressed using android:layout_width) would
+             not fit on-screen at once, the right pane is permitted to
+             overlap the left.-->
+
+            <fragment
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/main_host_frag_threads"
+                android:name="androidx.navigation.fragment.NavHostFragment"
+                app:navGraph="@navigation/threads_navigation"
+                app:defaultNavHost="true"
+                />
+        <!--The second child becomes the right (content) pane. In this
+        example, android:layout_weight is used to express that this
+        pane should grow to consume leftover available space when the
+        window is wide enough. This allows the content pane to
+        responsively grow in width on larger screens while still
+        requiring at least the minimum width expressed by
+        android:layout_width.  -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/tb_main"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorPrimary"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark"/>
+            <WebView
+                android:id="@+id/ww_main"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:background="@color/colorPrimary"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark"
+                android:layout_weight="0.5"/>
+            <fragment
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:id="@+id/main_host_frag_replies"
+                android:name="androidx.navigation.fragment.NavHostFragment"
+                android:layout_weight="0.5"
+                app:navGraph="@navigation/replies_navigation"
+                app:defaultNavHost="true"
+                />
+        </LinearLayout>
+
+
+    </android.support.v4.widget.SlidingPaneLayout>
+
+
+
+</RelativeLayout>
+
