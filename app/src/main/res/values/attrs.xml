@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <attr name="windowBackground" format="color|reference" />
+    <attr name="colorBackground" format="color|reference" />
+
+    <attr name="listItemColor" format="color|reference" />
+    <attr name="listItemColorReleased" format="color|reference" />
+
+    <attr name="textColorStrong" format="color|reference" />
+    <attr name="textColorMedium" format="color|reference" />
+    <attr name="textColorDim" format="color|reference" />
+    <attr name="textColorLink" format="color|reference" />
+    <attr name="colorPrimaryLight" format="color|reference" />
+
+    <attr name="colorDialogBackground" format="color|reference" />
+    <attr name="previewPlaceHolder" format="color|reference" />
+    <attr name="previewPlaceHolderRounded" format="reference" />
+
+
+    <attr name="colorIcon" format="color|reference" />
+
+
+    <bool name="is_rtl">false</bool>
+
+</resources>

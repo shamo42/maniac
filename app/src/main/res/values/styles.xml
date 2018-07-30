@@ -2,12 +2,63 @@
 
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+
+    <style name="AppCompat.Day"  parent="Theme.AppCompat.Light.NoActionBar">
+
+        <item name="colorPrimary">@color/material_red_2_primary</item>
+        <item name="colorPrimaryDark">@color/material_red_2_primary_dark</item>
+        <item name="colorAccent">@color/material_azure_ld_pimary_dark</item>
+
+
+        <item name="colorDialogBackground">?android:attr/colorBackground</item>
+
+        <item name="android:colorBackground">@color/grey_30</item>
+        <item name="android:windowBackground">@android:color/white</item>
+
+        <item name="listItemColor">?android:attr/colorBackground</item>
+        <item name="listItemColorReleased">@color/grey_20</item>
+
+        <item name="android:textColor">@color/grey_200</item>
+        <item name="textColorStrong">@color/grey_235</item>
+        <item name="textColorDim">@color/grey_145</item>
+        <item name="textColorLink">?attr/colorPrimaryDark</item>
+
+        <item name="previewPlaceHolder">@color/grey_40</item>
+
+        <item name="colorControlNormal">#c5c5c5</item>
+        <item name="colorControlActivated">?attr/colorAccent</item>
+        <item name="colorControlHighlight">?attr/colorAccent</item>
+
     </style>
+
+
+    <style name="AppCompat.Night"  parent="Theme.AppCompat.NoActionBar">
+
+        <item name="colorPrimary">@color/material_azure_ld_primary</item>
+        <item name="colorPrimaryDark">@color/material_azure_ld_pimary_dark</item>
+        <item name="colorAccent">@color/colorPrimary</item>
+
+        <item name="colorDialogBackground">?android:attr/colorBackground</item>
+
+        <item name="android:windowBackground">@color/grey_235</item>
+        <item name="android:colorBackground">@color/grey_215</item>
+
+        <item name="listItemColor">?android:attr/colorBackground</item>
+        <item name="listItemColorReleased">@color/grey_170</item>
+
+        <item name="android:textColor">@color/grey_30</item>
+        <item name="textColorStrong">@color/grey_l5</item>
+        <item name="textColorDim">@color/grey_60</item>
+        <item name="textColorLink">?attr/colorPrimaryDark</item>
+
+        <item name="previewPlaceHolder">@color/grey_210</item>
+
+        <item name="colorControlNormal">#c5c5c5</item>
+        <item name="colorControlActivated">?attr/colorAccent</item>
+        <item name="colorControlHighlight">?attr/colorAccent</item>
+
+
+    </style>
+
 
 </resources>

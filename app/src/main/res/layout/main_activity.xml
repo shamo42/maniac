@@ -5,7 +5,7 @@
     android:orientation="vertical">
 
     <android.support.v4.widget.SlidingPaneLayout
-        android:id="@+id/sliding_pane_layout"
+        android:id="@+id/pane_main"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -38,14 +38,19 @@
                 android:id="@+id/tb_main"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/colorPrimary"
-                android:theme="@style/ThemeOverlay.AppCompat.Dark"/>
+                android:background="?attr/colorPrimary"
+                android:theme="@style/ThemeOverlay.AppCompat.Dark">
+                <Spinner
+                    android:id="@+id/sp_boards"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </android.support.v7.widget.Toolbar>
+
             <WebView
                 android:id="@+id/ww_main"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:background="@color/colorPrimary"
-                android:theme="@style/ThemeOverlay.AppCompat.Dark"
+                android:background="@android:color/transparent"
                 android:layout_weight="0.5"/>
             <fragment
                 android:layout_width="match_parent"

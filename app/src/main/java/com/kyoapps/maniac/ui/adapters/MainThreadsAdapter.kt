@@ -1,7 +1,8 @@
 package com.kyoapps.maniac.ui.adapters
 
-import android.content.SharedPreferences
 import android.os.Bundle
+import android.os.Handler
+import android.support.v4.widget.SlidingPaneLayout
 import android.support.v7.recyclerview.extensions.ListAdapter
 import android.support.v7.util.DiffUtil
 import android.support.v7.widget.RecyclerView
@@ -19,7 +20,11 @@ import com.kyoapps.maniac.room.entities.ThreadEnt
 import com.kyoapps.maniac.viewmodel.MainDS
 import com.kyoapps.maniac.viewmodel.MainVM
 
-class MainThreadsAdapter(private val mainVM: MainVM, private val mainDS: MainDS, private val settings: ThreadDisplaySettingsItem): ListAdapter<ThreadEnt, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+class MainThreadsAdapter(private val slidingPaneLayout: SlidingPaneLayout?, private val mainVM: MainVM,
+                         private val mainDS: MainDS, private val settings: ThreadDisplaySettingsItem)
+    : ListAdapter<ThreadEnt, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+
+    private var lastSelectedId = -1L
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ThreadViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
@@ -31,17 +36,21 @@ class MainThreadsAdapter(private val mainVM: MainVM, private val mainDS: MainDS,
         val threadEnt = getItem(position)
         if (threadEnt != null) {
             (holder as ThreadViewHolder).bindTo(threadEnt)
+            holder.view.isSelected = lastSelectedId == getItemId(position)
         }
 
         (holder as ThreadViewHolder).view.setOnClickListener {
             getItem(holder.adapterPosition)?.let {
                 Log.d(TAG, "clicked MainThreadsAdapter brdid ${it.brdid} thrdid ${it.thrdid}")
-                FuncFetch.fetchReplies(mainDS, LoadRequestItem(it.brdid, it.thrdid, null))
-                mainVM.setRepliesRequestItem(LoadRequestItem(it.brdid, it.thrdid, null))
+
+                if (it.thrdid.toLong() != lastSelectedId) {
+                    FuncFetch.fetchReplies(mainDS, LoadRequestItem(it.brdid, it.thrdid, null))
+                    mainVM.setRepliesRequestItem(LoadRequestItem(it.brdid, it.thrdid, null))
+                }
+                Handler().postDelayed({slidingPaneLayout?.closePane()}, 480)
             }
         }
     }
-
 
 
     class ThreadViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -52,9 +61,28 @@ class MainThreadsAdapter(private val mainVM: MainVM, private val mainDS: MainDS,
         fun bindTo(replyEnt: ThreadEnt) {
             title.text = replyEnt.subject
             count.text = replyEnt.totalReplies.toString()
+
         }
     }
 
+    override fun getItemId(position: Int): Long {
+        return getItem(position).thrdid.toLong()
+    }
+
+    private fun getPosFromId(id: Long): Int {
+        for (i in 0..(itemCount-1)) {
+            if (getItemId(i) == id) return i
+        }
+        return -1
+    }
+
+    fun setLastSelected(id: Long) {
+        if (lastSelectedId != id) {
+            notifyItemChanged(getPosFromId(lastSelectedId))
+            lastSelectedId = id
+            notifyItemChanged(getPosFromId(id))
+        }
+    }
 
     companion object {
         private const val TAG = "MainThreadsAdapter"

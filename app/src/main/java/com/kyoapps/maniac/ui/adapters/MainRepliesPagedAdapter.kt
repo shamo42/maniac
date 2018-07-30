@@ -18,6 +18,8 @@ import com.kyoapps.maniac.viewmodel.MainVM
 
 class MainRepliesPagedAdapter(private val mainVM: MainVM, private val settings: SharedPreferences): PagedListAdapter<ReplyEnt, MainRepliesPagedAdapter.ReplyViewHolder>(DIFF_CALLBACK) {
 
+    private var lastSelectedId = -1L
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReplyViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val view = layoutInflater.inflate(R.layout.main_reply_row, parent, false)
@@ -28,11 +30,13 @@ class MainRepliesPagedAdapter(private val mainVM: MainVM, private val settings: 
         val replyEnt = getItem(position)
         if (replyEnt != null) {
             holder.bindTo(replyEnt)
+            holder.view.isSelected = lastSelectedId == getItemId(position)
         }
 
         holder.view.setOnClickListener {
             getItem(holder.adapterPosition)?.let {
                 Log.i(TAG, "MainRepliesPagedAdapter clicked thrdid ${it.thrdid} msgid ${it.msgid}")
+
                 mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
             }
         }
@@ -46,6 +50,33 @@ class MainRepliesPagedAdapter(private val mainVM: MainVM, private val settings: 
         fun bindTo(replyEnt: ReplyEnt) {
             title.text = replyEnt.subject
             user.text = replyEnt.user
+        }
+    }
+
+    override fun getItemId(position: Int): Long {
+        getItem(position)?.msgid?.let { return it.toLong() }
+        return -1
+    }
+
+    private fun getPosFromId(id: Long): Int {
+        for (i in 0..(itemCount-1)) {
+            if (getItemId(i) == id) return i
+        }
+        return -1
+    }
+
+    fun getSubjectFromId(id: Long?): String? {
+        id?.let {
+            return getItem(getPosFromId(it))?.subject
+        }
+        return null
+    }
+
+    fun setlastSelected(id: Long) {
+        if (lastSelectedId != id) {
+            notifyItemChanged(getPosFromId(lastSelectedId))
+            lastSelectedId = id
+            notifyItemChanged(getPosFromId(id))
         }
     }
 

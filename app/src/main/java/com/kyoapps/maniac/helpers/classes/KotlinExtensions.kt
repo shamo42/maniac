@@ -31,37 +31,36 @@ fun <T> Maybe<T>.subOnNewObsOnMain(): Maybe<T> {
 }
 
 fun <T> Single<T>.retryIfTimeOut(retries: Int, waitMs: Long): Single<T> {
-    return this.retry({ i: Int, t: Throwable ->
+    return this.retry { i: Int, t: Throwable ->
         val shouldRetry = i <= retries && t is SocketTimeoutException
         if (shouldRetry) {
             Log.e(TAG, "Retry nr $i", t)
             Thread.sleep(waitMs * i)
-
         }
         shouldRetry
-    })
+    }
 }
 
 fun <T> Flowable<T>.retryIfTimeOut(retries: Int, waitMs: Long): Flowable<T> {
-    return this.retry({ i: Int, t: Throwable ->
+    return this.retry { i: Int, t: Throwable ->
         val shouldRetry = i <= retries && t is SocketTimeoutException
         if (shouldRetry) {
             Log.e(TAG, "Retry nr $i", t)
             Thread.sleep(waitMs * i)
         }
         shouldRetry
-    })
+    }
 }
 
 fun <T> Single<T>.retryIfErrorCode(retries: Int, code: Int): Single<T> {
-    return this.retry({ i: Int, t: Throwable ->
+    return this.retry { i: Int, t: Throwable ->
         val shouldRetry = i <= retries && (t.localizedMessage != null && t.localizedMessage!!.contains(code.toString()))
         if (shouldRetry) {
             Log.e(TAG, "Retry error code nr $i ${t.localizedMessage}")
             Thread.sleep(2000L * i)
         }
         shouldRetry
-    })
+    }
 }
 
 

@@ -1,7 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorPrimary">#ff3632</color>
+    <color name="colorPrimaryDark">#e12f2c</color>
     <color name="colorAccent">#FF4081</color>
+
+    <color name="material_logo_primary">#31ac7a</color>
+    <color name="material_logo_pimary_dark">#2c9c6e</color>
+    <color name="material_logo_pimary_light">#4effb7</color>
+
+    <color name="material_azure_ld_primary">#008f96</color>
+    <color name="material_azure_ld_pimary_dark">#009ca3</color>
+    <color name="material_azure_ld_pimary_light">#76bec1</color>
+
+
+    <color name="material_red_primary">#e5354c</color>
+    <color name="material_red_primary_dark">#cc2f44</color>
+    <color name="material_red_primary_light">#ff5c59</color>
+
+    <color name="material_red_2_primary">#e53835</color>
+    <color name="material_red_2_primary_dark">#d93431</color>
+    <color name="material_red_2_primary_light">#ff4f4c</color>
+
+    <color name="material_lime_primary">#ffffff</color>
+    <color name="material_lime_primary_dark">#aebe28</color>
+    <color name="material_lime_primary_light">#eaff38</color>
+
+
+    <color name="material_green_2_primary">#73a46a</color>
+    <color name="material_green_2_primary_dark">#6a9762</color>
+    <color name="material_green_2_primary_light">#a4df99</color>
+
+    <color name="material_blue_primary">#4c768f</color>
+    <color name="material_blue_primary_dark">#466d84</color>
+    <color name="material_blue_primary_light">#8cd4ff</color>
+
+    <color name="grey_05">#fafafa</color>
+    <color name="grey_07">#f8f8f8</color>
+    <color name="grey_08">#f9f9f9</color>
+    <color name="grey_l0">#fff5f5f5</color>
+    <color name="grey_l5">#fff0f0f0</color>
+    <color name="grey_20">#ffebebeb</color>
+    <color name="grey_30">#ffe1e1e1</color>
+    <color name="grey_40">#ffd7d7d7</color>
+    <color name="grey_50">#ffcdcdcd</color>
+    <color name="grey_60">#ffc3c3c3</color>
+    <color name="grey_70">#ffb9b9b9</color>
+    <color name="grey_80">#afafaf</color>
+    <color name="grey_90">#a5a5a5</color>
+    <color name="grey_100">#ff9b9b9b</color>
+    <color name="grey_120">#919191</color>
+    <color name="grey_130">#878787</color>
+    <color name="grey_140">#7d7d7d</color>
+    <color name="grey_145">#828282</color>
+    <color name="grey_150">#737373</color>
+    <color name="grey_160">#ff5f5f5f</color>
+    <color name="grey_170">#ff555555</color>
+    <color name="grey_180">#4b4b4b</color>
+    <color name="grey_190">#414141</color>
+    <color name="grey_200">#373737</color>
+    <color name="grey_210">#ff2d2d2d</color>
+    <color name="grey_215">#282828</color>
+    <color name="grey_220">#232323</color>
+    <color name="grey_225">#1e1e1e</color>
+    <color name="grey_230">#191919</color>
+    <color name="grey_235">#141414</color>
+    <color name="grey_245">#0a0a0a</color>
+
+    <color name="grey_trans_1">#30dcdcdc</color>
+    <color name="grey_trans_2">#44cccccc</color>
+    <color name="grey_trans_3">#b6212121</color>
+
+    <color name="grey_trans_4">#b6161616</color>
+    <color name="grey_trans_5">#b2000000</color>
+    <color name="grey_trans_5_cent">#28000000</color>
+    <color name="grey_trans_6">#c6030303</color>
+
+    <color name="grey_trans_7">#a4000000</color>
+    <color name="grey_trans_8">#e4212121</color>
+    <color name="grey_trans_9">#26838383</color>
+
+    <color name="grey_purplish">#f0f0f1</color>
+
+
+    <color name="black_overlay">#66000000</color>
+
 </resources>

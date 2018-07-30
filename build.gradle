@@ -1,15 +1,15 @@
 buildscript {
 
     ext {
-        kotlinVersion = '1.2.41'
+        kotlinVersion = '1.2.51'
     }
     repositories {
         jcenter()
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.0-alpha17'
-        classpath 'android.arch.navigation:navigation-safe-args-gradle-plugin:1.0.0-alpha02'
+        classpath 'com.android.tools.build:gradle:3.3.0-alpha03'
+        classpath 'android.arch.navigation:navigation-safe-args-gradle-plugin:1.0.0-alpha04'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -29,11 +29,10 @@ task clean(type: Delete) {
 
 ext {
     supportLibVersion = "27.1.1"
-    navigationVersion = "1.0.0-alpha02"
-    pagingVersion = "1.0.0"
-    constraintLayoutVersion = "1.1.1"
+    navigationVersion = "1.0.0-alpha04"
+    pagingVersion = "1.0.1"
+    constraintLayoutVersion = "1.1.2"
     architectureComponentsVersion = "1.1.1"
-    architectureComponentsVersionRoom = "1.1.1-rc1"
 
     daggerVersion = "2.15"
     rxjavaVersion = "2.1.12"

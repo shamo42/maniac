@@ -3,9 +3,10 @@ package com.kyoapps.maniac.functions
 import com.kyoapps.maniac.room.entities.ThreadEnt
 import okhttp3.ResponseBody
 import retrofit2.Response
-import android.util.Log
 import com.kyoapps.maniac.helpers.C_COMMON
+import com.kyoapps.maniac.helpers.classes.pojo.Board
 import com.kyoapps.maniac.room.entities.ReplyEnt
+import android.text.Html
 
 
 //todo replace with new api
@@ -140,7 +141,7 @@ object FuncParse {
     }
 
     // bad code. use new api asap
-    fun parseMessageLegacy(response: Response<ResponseBody>, showImg: Boolean, showGif: Boolean, youtubeEmbed: Boolean, width: Int): String {
+    fun parseMessageLegacy(response: Response<ResponseBody>, showImg: Boolean, showGif: Boolean): String {
 
         var readLine = false
         var isQuote = false
@@ -155,10 +156,10 @@ object FuncParse {
             }
             if (readLine) {
                 if (line.contains("images/spoiler.png")) {
-                    Log.d("SPOILER_LINE BEFORE", line.substring(50))
+                    //Log.d("SPOILER_LINE BEFORE", line.substring(50))
                     //line = line.replace("images/spoiler.png", "file:///android_asset/images/spoiler_2.png").replace("width=\"17\" height=\"15\"", "");
                     line = line.replace("images/spoiler.png", C_COMMON.MANIAC_BASE_URL + "/images/spoiler.png")
-                    Log.d("SPOILER_LINE AFTER", line.substring(50))
+                    //Log.d("SPOILER_LINE AFTER", line.substring(50))
                 }
 
                 if (!isQuote) {
@@ -169,7 +170,7 @@ object FuncParse {
 
                 if (showImg && !isQuote && line.contains("http")) {
                     if (showGif) {
-                        Log.d("LINE IMG", line)
+                        //Log.d("LINE IMG", line)
                         val image = line.indexOf(".jpg\" ta") + line.indexOf(".png\" ta") + line.indexOf(".gif\" ta")
                         //Log.d(Integer.toString(line.indexOf(".jpg\" ta")) + " " + Integer.toString(line.indexOf(".png\" ta")), "VALUES");
                         if (image > 0) {
@@ -180,7 +181,7 @@ object FuncParse {
                                 line = line.replace("[<a href", "<div class=\"img-wraper\"><img src").substring(0, image + 31) + "/></div>" + line.substring(lineEnd)
                             if (line.contains("www.dropbox.com"))
                                 line = line.replace("www.dropbox.com", "dl.dropboxusercontent.com")
-                            Log.d("LINE WITH IMAGE", line)
+                            //Log.d("LINE WITH IMAGE", line)
                         }
                     } else {
                         val image = line.indexOf(".jpg\" ta") + line.indexOf(".png\" ta")
@@ -206,36 +207,17 @@ object FuncParse {
                             youtube = line.indexOf("youtu.be/")
                             if (youtube != -1) {
                                 start = youtube + 9
-                                if (youtubeEmbed) {
-                                    val height = width * 9 / 16
-                                    //line = line + "<iframe class=\"youtube-player\" style=\"border: 0; width: 480px; height: 320px; padding:0px; margin:0px\" id=\"ytplayer\" type=\"text/html\" src=\"http://www.youtube.com/embed/"
-                                    line = (line + "<iframe class=\"youtube-player\" style=\"border: 0; width:" + Integer.toString(width) + "px !important; height:" + Integer.toString(height) + "px !important; margin:0px\" id=\"ytplayer\" type=\"text/html\" src=\"http://www.youtube.com/embed/"
-                                            + line.substring(start, start + 11)
-                                            + "?fs=0\" frameborder=\"0\">\n"
-                                            + "</iframe>\n")
-                                } else {
-                                    line = line + "<br><div class=\"img-wraper\"><a href=\"http://www.youtube.com/watch?v=" + line.substring(start, start + 11) + "\">" +
+                                line = line + "<br><div class=\"img-wraper\"><a href=\"http://www.youtube.com/watch?v=" + line.substring(start, start + 11) + "\">" +
                                             "<img src=\"http://img.youtube.com/vi/" + line.substring(start, start + 11) + "/hqdefault.jpg\" ></a></div><br>"
-                                }
+
                             }
                         } else {
 
                             //Log.d(line.substring(60), "youtube line 0");
                             start = line.indexOf("v=", youtube) + 2
 
-                            line = if (youtubeEmbed) {
-                                //int width = getResources().getDisplayMetrics().widthPixels / 3;
-                                val height = width * 9 / 16
-
-                                //line = line + "<iframe class=\"youtube-player\" style=\"border: 0; width: 480px; height: 320px; margin:0px\" id=\"ytplayer\" type=\"text/html\" src=\"http://www.youtube.com/embed/"
-                                (line + "<iframe class=\"youtube-player\" style=\"border: 0; width:" + Integer.toString(width) + "px !important; height:" + Integer.toString(height) + "px !important; margin:0px\" id=\"ytplayer\" type=\"text/html\" src=\"http://www.youtube.com/embed/"
-                                        + line.substring(start, start + 11)
-                                        + "?fs=0\" frameborder=\"0\">\n"
-                                        + "</iframe><br>\n")
-                            } else {
-                                line + "<br><div class=\"img-wraper\"><a href=\"http://www.youtube.com/watch?v=" + line.substring(start, start + 11) + "\">" +
+                            line = line + "<br><div class=\"img-wraper\"><a href=\"http://www.youtube.com/watch?v=" + line.substring(start, start + 11) + "\">" +
                                         "<img src=\"http://img.youtube.com/vi/" + line.substring(start, start + 11) + "/hqdefault.jpg\" ></a></div><br>"
-                            }
                             //Log.d(line, "youtube line");
                         }
                     }
@@ -261,7 +243,24 @@ object FuncParse {
         return messageBuilder.toString()
     }
 
+    // use new api
+    fun parseBoardsLegacy(response: Response<ResponseBody>): List<Board> {
+        val resultList = ArrayList<Board>()
 
+        response.body()?.byteStream()?.bufferedReader(Charsets.UTF_8)?.forEachLine {
+            val start = it.indexOf("<a href=\"pxmboard.php?mode=board&brdid=")
+            if (start != -1 && it.length > start + 39) {
+                val subStringStart = it.substring(start + 39)
+                val endId = subStringStart.indexOf("\">")
+                if (endId != -1) {
+                    val brdid = Integer.parseInt(subStringStart.substring(0, endId)).toShort()
+                    val label = Html.fromHtml(subStringStart.substring(endId + 2, subStringStart.indexOf("</a>"))).toString()
+                    resultList.add(Board(brdid, label))
+                }
+            }
+        }
+        return resultList
+    }
 
     fun parseMessageForThrdid(response: Response<ResponseBody>): Int {
         var result = -1
@@ -282,23 +281,24 @@ object FuncParse {
 
 
     // bad code. use new api asap
-    fun formatHtmlLegacy(content: String, title: String, colorText: String, colorLink: String, colorQuote: String, lineheight: String, justify: Boolean, imgFullScreenWidth: Boolean): String {
+    fun formatHtmlLegacy(content: String, title: String?, textColor: Int, quoteColor: Int, linkColor: Int, lineHeight: String): String {
+
+        val textColorHex = String.format("%06X", 0xFFFFFF and textColor)
+        val linkColorHex = String.format("%06X", 0xFFFFFF and linkColor)
+        val quoteColorHex = String.format("%06X", 0xFFFFFF and quoteColor)
+
         var cont = content
 
+        cont = cont.replace("<br><font face=\"Courier New\">", "").replace("<font color=\"808080\">", "<font color=\"848484\">").replace("\t\t</font><br><br></td>", "</font></td>")
 
-        cont = cont.replace("<br><font face=\"Courier New\">", "").replace("<font color=\"808080\">", "<font color=\"#848484\">").replace("\t\t</font><br><br></td>", "</font></td>")
+
+        val img = "img {max-width: 100%;  height: auto; display: block;\n" +
+                "    margin-left: auto;\n" +
+                "    margin-right: auto;}\n"
+        val imgWraper = ".img-wraper{margin: 0px -8px;}\n"
 
 
-        var img = "img {max-width: 100%;}"
-        var imgWraper = ""
-        if (imgFullScreenWidth) {
-            img = "img {max-width: 100%;  height: auto; display: block;\n" +
-                    "    margin-left: auto;\n" +
-                    "    margin-right: auto;}\n"
-            imgWraper = ".img-wraper{margin: 0px -8px;}\n"
-        }
-
-        val mJustify = if (justify) "style=\"text-align:justify\"" else ""
+        val mJustify = "style=\"text-align:justify\""
 
 
         return "<html><head><meta name=\"viewport\" cont=\"width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0\">" +
@@ -313,15 +313,15 @@ object FuncParse {
                 "    font-family: roboto;\n" +
                 "    src: url('file:///android_asset/fonts/Roboto-Regular.ttf');\n" +
                 "}" +
-                "div { font-family: roboto, Verdana, sans-serif;" + lineheight + "}" +
+                "div { font-family: roboto, Verdana, sans-serif;" + lineHeight + "}" +
                 "a {word-wrap: break-word; -webkit-tap-highlight-color: rgba(0, 0, 0, 0);}" +
 
                 "</style>" +
                 "</head>" +
-                "<body text =\"" + colorText + "\" link=\"" + colorLink + "\" vlink=\"" + colorLink + "\"" + mJustify + ">" +
+                "<body text =\"" + textColorHex + "\" link=\"" + linkColorHex + "\" vlink=\"" + linkColorHex + "\"" + mJustify + ">" +
                 "<div class=\"parent\">" +
                 "<p><b>" + title + "</b></p>" +
-                cont.replace("<br><font face=\"Courier New\">", "<font color=\"$colorText\">").replace("<font color=\"808080\">", "<font color=\"$colorQuote\">").replace("\t\t</font><br><br></td>", "</font></td>") + //.replace("<br />", "") +
+                cont.replace("<br><font face=\"Courier New\">", "<font color=\"$textColorHex\">").replace("<font color=\"808080\">", "<font color=\"$quoteColorHex\">").replace("\t\t</font><br><br></td>", "</font></td>") + //.replace("<br />", "") +
 
                 "</div>" +
                 "<script lang=\"javascript\" type=\"text/javascript\">\n" +

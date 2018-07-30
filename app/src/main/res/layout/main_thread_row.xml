@@ -6,7 +6,7 @@
     android:id="@+id/main_row_item_pane"
     android:clickable="true"
     android:focusable="true"
-    android:background="?attr/selectableItemBackground"
+    android:background="@drawable/row_activated_background"
     android:descendantFocusability="blocksDescendants"
     >
 
@@ -19,7 +19,7 @@
         android:singleLine="true"
         android:layout_alignParentLeft="true"
         android:gravity="top"
-        android:textSize="15sp"
+        android:textSize="14sp"
         android:paddingLeft="10dp"
         android:layout_centerVertical="true"
         android:layout_toLeftOf="@+id/tv_thread_row_replycount"

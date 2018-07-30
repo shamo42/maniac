@@ -2,37 +2,50 @@ package com.kyoapps.maniac.ui
 
 import android.content.res.Resources
 import android.os.Bundle
-import android.support.design.widget.BottomNavigationView
-import android.support.design.widget.NavigationView
 import android.support.v4.widget.DrawerLayout
+import android.support.v4.widget.SlidingPaneLayout
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
-import android.widget.Toast
-import androidx.navigation.NavController
+import android.util.TypedValue
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import com.kyoapps.maniac.R
+import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
+import com.kyoapps.maniac.dagger.modules.ContextModule
+import com.kyoapps.maniac.helpers.C_SETTINGS
 
 class MainActivity : AppCompatActivity() {
     private var drawerLayout: DrawerLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        val component = DaggerActivityComponent.builder()
+                .contextModule(ContextModule(this))
+                .build()
+
+        setTheme(if (component.defaultSettings.getBoolean(C_SETTINGS.NIGHT_MODE, true)) R.style.AppCompat_Night else R.style.AppCompat_Day )
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.main_activity)
 
         val toolbar = findViewById<Toolbar>(R.id.tb_main)
         setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
+
 
         val host: NavHostFragment = supportFragmentManager
                 .findFragmentById(R.id.main_host_frag_threads) as NavHostFragment? ?: return
 
+        // Set up SlidingPane fade color
+        val typedValue = TypedValue()
+        theme.resolveAttribute(R.attr.colorPrimary, typedValue, true)
+        (findViewById<SlidingPaneLayout>(R.id.pane_main))?.sliderFadeColor = typedValue.data
+
 
         // Set up Action Bar
         val navController = host.navController
+
 
         navController.addOnNavigatedListener { _, destination ->
             val dest: String = try {
@@ -40,9 +53,7 @@ class MainActivity : AppCompatActivity() {
             } catch (e: Resources.NotFoundException) {
                 Integer.toString(destination.id)
             }
-
-            Toast.makeText(this@MainActivity, "Navigated to $dest", Toast.LENGTH_SHORT).show()
-            Log.d("NavigationActivity", "Navigated to $dest")
+            Log.d(TAG, "Navigated to $dest")
         }
     }
 
@@ -88,5 +99,16 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         return NavigationUI.navigateUp(drawerLayout,
                 Navigation.findNavController(this, R.id.main_host_frag_threads))
+    }
+
+
+    override fun onBackPressed() {
+        val slidingPaneLayout: SlidingPaneLayout? = findViewById(R.id.pane_main)
+        if (slidingPaneLayout != null &&!slidingPaneLayout.isOpen && slidingPaneLayout.isSlideable) slidingPaneLayout.openPane()
+            else super.onBackPressed()
+    }
+
+    companion object {
+        const val TAG = "MainActivity"
     }
 }

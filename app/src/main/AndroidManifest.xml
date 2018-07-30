@@ -10,7 +10,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
+        android:theme="@style/AppCompat.Night"
         tools:ignore="GoogleAppIndexingWarning">
         <activity android:name="com.kyoapps.maniac.ui.MainActivity">
             <intent-filter>

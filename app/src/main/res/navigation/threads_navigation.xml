@@ -11,7 +11,12 @@
         tools:layout="@layout/main_threads_frag">
 
 
-    <deepLink app:uri="maniac-forum.de/forum/pxmboard.php{mode}"/></fragment>
+        <deepLink app:uri="maniac-forum.de/forum/pxmboard.php{mode}"/>
+        <deepLink app:uri="maniac-forum.de/pxmboard.php{mode}"/>
+        <deepLink app:uri="www.maniac-forum.de/forum/pxmboard.php{mode}"/>
+        <deepLink app:uri="www.maniac-forum.de/pxmboard.php{mode}"/>
+
+    </fragment>
 
     <!--fragment
         android:id="@+id/mainRepliesFrag"

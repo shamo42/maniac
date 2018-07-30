@@ -9,6 +9,10 @@ import retrofit2.http.*
 interface ManiacApiLEGACY {
 
     @GET("pxmboard.php")
+    fun getBoards(
+    ): Single<Response<ResponseBody>>
+
+    @GET("pxmboard.php")
     fun getThreads(
             @Query("mode") threadlist: String,
             @Query("brdid") brdid: Short

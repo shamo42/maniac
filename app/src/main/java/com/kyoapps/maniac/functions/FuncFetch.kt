@@ -19,7 +19,7 @@ object FuncFetch {
     }
 
     fun fetchReplies(mainDS: MainDS, loadRequestItem: LoadRequestItem) {
-        if (loadRequestItem.thrdid != -1) {
+        if (loadRequestItem.thrdid != null && loadRequestItem.thrdid != -1) {
             compositeDisposable.add(mainDS.fetchRepliesIntoDb(loadRequestItem.brdid, loadRequestItem.thrdid)
                     .subscribeOn(Schedulers.newThread())
                     .subscribe({result ->  Log.i(TAG, "fetchReplies success $result") },
