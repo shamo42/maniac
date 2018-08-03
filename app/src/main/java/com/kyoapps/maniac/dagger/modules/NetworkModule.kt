@@ -37,10 +37,10 @@ class NetworkModule {
                 .connectTimeout(4, TimeUnit.SECONDS)
                 .readTimeout(8, TimeUnit.SECONDS)
                 .writeTimeout(4, TimeUnit.SECONDS)
-                .addInterceptor({ chain ->  val request = chain.request().newBuilder()
-                            .addHeader("user-agent", C_COMMON.USER_AGENT)
-                            .build()
-                    chain.proceed(request)})
+                .addInterceptor { chain ->  val request = chain.request().newBuilder()
+                        .addHeader("user-agent", C_COMMON.USER_AGENT)
+                        .build()
+                    chain.proceed(request)}
                 //.cache(mCache)
                 .build()
     }

@@ -5,7 +5,6 @@
     <attr name="colorBackground" format="color|reference" />
 
     <attr name="listItemColor" format="color|reference" />
-    <attr name="listItemColorReleased" format="color|reference" />
 
     <attr name="textColorStrong" format="color|reference" />
     <attr name="textColorMedium" format="color|reference" />

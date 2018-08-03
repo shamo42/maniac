@@ -11,9 +11,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-
 import com.kyoapps.maniac.R
+
 import com.kyoapps.maniac.functions.FuncFetch
+import com.kyoapps.maniac.functions.FuncUi
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.helpers.classes.ThreadDisplaySettingsItem
 import com.kyoapps.maniac.room.entities.ThreadEnt
@@ -21,7 +22,8 @@ import com.kyoapps.maniac.viewmodel.MainDS
 import com.kyoapps.maniac.viewmodel.MainVM
 
 class MainThreadsAdapter(private val slidingPaneLayout: SlidingPaneLayout?, private val mainVM: MainVM,
-                         private val mainDS: MainDS, private val settings: ThreadDisplaySettingsItem)
+                         private val mainDS: MainDS, private val colorSelected: Int, private val colorPressed: Int,
+                         private val settings: ThreadDisplaySettingsItem)
     : ListAdapter<ThreadEnt, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
 
     private var lastSelectedId = -1L
@@ -29,6 +31,8 @@ class MainThreadsAdapter(private val slidingPaneLayout: SlidingPaneLayout?, priv
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ThreadViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val view = layoutInflater.inflate(R.layout.main_thread_row, parent, false)
+        view.background = FuncUi.makeSelector(colorSelected, colorPressed)
+
         return ThreadViewHolder(view)
     }
     
@@ -39,11 +43,12 @@ class MainThreadsAdapter(private val slidingPaneLayout: SlidingPaneLayout?, priv
             holder.view.isSelected = lastSelectedId == getItemId(position)
         }
 
-        (holder as ThreadViewHolder).view.setOnClickListener {
+        (holder as ThreadViewHolder).view.setOnClickListener { _->
             getItem(holder.adapterPosition)?.let {
-                Log.d(TAG, "clicked MainThreadsAdapter brdid ${it.brdid} thrdid ${it.thrdid}")
+                Log.i(TAG, "clicked MainThreadsAdapter brdid ${it.brdid} thrdid ${it.thrdid}")
 
                 if (it.thrdid.toLong() != lastSelectedId) {
+                    setLastSelected(holder, it.thrdid.toLong())
                     FuncFetch.fetchReplies(mainDS, LoadRequestItem(it.brdid, it.thrdid, null))
                     mainVM.setRepliesRequestItem(LoadRequestItem(it.brdid, it.thrdid, null))
                 }
@@ -61,7 +66,6 @@ class MainThreadsAdapter(private val slidingPaneLayout: SlidingPaneLayout?, priv
         fun bindTo(replyEnt: ThreadEnt) {
             title.text = replyEnt.subject
             count.text = replyEnt.totalReplies.toString()
-
         }
     }
 
@@ -76,11 +80,13 @@ class MainThreadsAdapter(private val slidingPaneLayout: SlidingPaneLayout?, priv
         return -1
     }
 
-    fun setLastSelected(id: Long) {
+    fun setLastSelected(holder: ThreadViewHolder?, id: Long) {
         if (lastSelectedId != id) {
+            holder?.view?.isSelected = true
             notifyItemChanged(getPosFromId(lastSelectedId))
             lastSelectedId = id
-            notifyItemChanged(getPosFromId(id))
+            // if (holder == null) refresh row to show it selected
+            if (holder == null) notifyItemChanged(getPosFromId(lastSelectedId))
         }
     }
 

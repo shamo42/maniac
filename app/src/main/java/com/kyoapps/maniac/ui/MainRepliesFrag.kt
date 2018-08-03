@@ -1,8 +1,8 @@
 package com.kyoapps.maniac.ui
 
-import android.annotation.SuppressLint
 import android.arch.lifecycle.Observer
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
@@ -20,6 +20,7 @@ import com.kyoapps.maniac.ui.adapters.MainRepliesPagedAdapter
 import android.support.annotation.ColorInt
 import android.util.TypedValue
 import com.kyoapps.maniac.functions.FuncParse
+import com.kyoapps.maniac.functions.FuncUi
 
 
 class MainRepliesFrag : Fragment() {
@@ -37,7 +38,6 @@ class MainRepliesFrag : Fragment() {
         return inflater.inflate(R.layout.main_replies_frag, container, false)
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -47,12 +47,14 @@ class MainRepliesFrag : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(activity)
         recyclerView.setHasFixedSize(true)
 
-        val adapter = MainRepliesPagedAdapter(component.mainVM, component.defaultSettings)
+        @ColorInt val colorPressed = context?.resources?.getColor(R.color.grey_trans_2) ?: Color.GRAY
+
+        val adapter = MainRepliesPagedAdapter(component.mainVM, FuncUi.getAttrColorData(context, R.attr.colorPrimary), colorPressed, component.defaultSettings)
         recyclerView.adapter = adapter
 
 
-        component.mainVM.repliesLiveDataPaged()?.observe(this, Observer {
-                it?.let {
+        component.mainVM.repliesLiveDataPaged()?.observe(this, Observer { pagedList ->
+                pagedList?.let {
                 if (it.isNotEmpty()) it[0]?.let {
                     if (component.mainVM.getLatestRequestItem().value?.thrdid != it.thrdid) {
                         component.mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
@@ -62,10 +64,10 @@ class MainRepliesFrag : Fragment() {
             }
         })
 
-        component.mainVM.getLatestRequestItem().observe(this, Observer {
-            it?.let {
+        component.mainVM.getLatestRequestItem().observe(this, Observer { requestItem ->
+            requestItem?.let {
                 lastRequest = it
-                if (it.msgid != null) adapter.setlastSelected(it.msgid.toLong())
+                if (it.msgid != null) adapter.setLastSelected(null, it.msgid.toLong())
             }
         })
 

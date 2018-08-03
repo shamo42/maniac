@@ -2,8 +2,10 @@ package com.kyoapps.maniac.ui
 
 import android.arch.lifecycle.Observer
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
+import android.support.annotation.ColorInt
 import android.support.v4.app.Fragment
 import android.support.v4.widget.SlidingPaneLayout
 import android.support.v7.widget.LinearLayoutManager
@@ -25,6 +27,7 @@ import com.kyoapps.maniac.ui.adapters.MainThreadsAdapter
 import com.squareup.moshi.Moshi
 import io.reactivex.disposables.CompositeDisposable
 import android.widget.ArrayAdapter
+import com.kyoapps.maniac.functions.FuncUi
 import com.kyoapps.maniac.helpers.classes.pojo.Board
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
@@ -34,7 +37,7 @@ class MainThreadsFrag : Fragment() {
 
     private lateinit var component: ActivityComponent
     private lateinit var compositeDisposable: CompositeDisposable
-    private var lastRequest = LoadRequestItem(1, 168250, 4224606)
+    private var lastRequest: LoadRequestItem? = null
     private var requestThreadsLayoutRefresh = true
     private var openPane = false
 
@@ -53,24 +56,29 @@ class MainThreadsFrag : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // request (board id, thread id, message id) from last session
-        val previousRequest = Moshi.Builder().build().adapter(LoadRequestItem::class.java).fromJson(
+        lastRequest = Moshi.Builder().build().adapter(LoadRequestItem::class.java).fromJson(
                 component.defaultSettings.getString(C_SETTINGS.PREVIOUS_REQUEST,
-                        Moshi.Builder().build().adapter(LoadRequestItem::class.java).toJson(lastRequest)))
+                        Moshi.Builder().build().adapter(LoadRequestItem::class.java).toJson(LoadRequestItem(1, 168250, 4224606))))
 
-        Log.i(TAG, "savedInstanceState == null: ${savedInstanceState == null}")
+        Log.d(TAG, "savedInstanceState == null: ${savedInstanceState == null}")
         if (savedInstanceState == null) {
             // load deeplink if present. Else load last opened
             if (arguments?.get("mode") != null) {
-
                 loadDeeplink(arguments?.get("mode") as String)
             } else {
-                previousRequest?.let {
+                lastRequest?.let {
                     initBoardSpinner(it)
                     fetchOnline(it)
                     loadFromDb(it)
                 }
             }
-        } else { initBoardSpinner(previousRequest) }
+        } else {
+            savedInstanceState.getString(C_SETTINGS.PREVIOUS_REQUEST, null)?.let { request ->
+                lastRequest = Moshi.Builder().build().adapter(LoadRequestItem::class.java).fromJson(request)
+                lastRequest?.let { loadFromDb(it) }
+            }
+            initBoardSpinner(lastRequest)
+        }
 
 
         val recyclerView: RecyclerView = view.findViewById(R.id.rv_threads)
@@ -79,14 +87,17 @@ class MainThreadsFrag : Fragment() {
 
         val slidingPaneLayout: SlidingPaneLayout? = activity?.findViewById(R.id.pane_main)
 
+        @ColorInt val colorPressed = context?.resources?.getColor(R.color.grey_trans_2)?: Color.GRAY
+
         val adapter: MainThreadsAdapter? = MainThreadsAdapter(slidingPaneLayout, component.mainVM, component.mainDS,
+                FuncUi.getAttrColorData(context, R.attr.colorPrimary), colorPressed,
                 ThreadDisplaySettingsItem(2, false, R.layout.main_thread_row))
 
         recyclerView.adapter = adapter
 
-        component.mainVM.threadsLiveDataRx()?.observe(this, Observer {
+        component.mainVM.threadsLiveDataRx()?.observe(this, Observer { commonResource ->
             // delay load for smoother animation. load immediately if slidingPane already open
-                it?.data?.let {
+                commonResource?.data?.let {
                     if (it.isNotEmpty() && requestThreadsLayoutRefresh) {
                         requestThreadsLayoutRefresh = false
                         if (slidingPaneLayout?.isOpen == true) adapter?.submitList(it)
@@ -95,10 +106,10 @@ class MainThreadsFrag : Fragment() {
                 }
         })
 
-        component.mainVM.getLatestRequestItem().observe(this, Observer {
-            it?.let {
+        component.mainVM.getLatestRequestItem().observe(this, Observer { requestItem ->
+            requestItem?.let {
                 Log.i(TAG, "latest msgId: ${it.msgid}")
-                it.thrdid?.let { adapter?.setLastSelected(it.toLong()) }
+                it.thrdid?.let {thrdid -> adapter?.setLastSelected(null, thrdid.toLong()) }
                 lastRequest = it
                }
         })
@@ -157,11 +168,11 @@ class MainThreadsFrag : Fragment() {
 
     private fun updateBoards(loadRequestItem: LoadRequestItem) {
         component.mainVM.getBoardsLiveDataRx()?.observe(this, Observer {
-            it?.data?.let {
+            it?.data?.let { list ->
                 val spinner: Spinner? = activity?.findViewById(R.id.sp_boards)
-                setSpinner(spinner, it, loadRequestItem)
+                setSpinner(spinner, list, loadRequestItem)
                 val moshiAdapter: JsonAdapter<List<Board>> = Moshi.Builder().build().adapter(Types.newParameterizedType(List::class.java, Board::class.java))
-                component.defaultSettings.edit().putString(C_SETTINGS.BOARDS, moshiAdapter.toJson(it)).apply()
+                component.defaultSettings.edit().putString(C_SETTINGS.BOARDS, moshiAdapter.toJson(list)).apply()
             }
         })
     }
@@ -193,6 +204,12 @@ class MainThreadsFrag : Fragment() {
     }
 
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.run {
+            putString(C_SETTINGS.PREVIOUS_REQUEST, Moshi.Builder().build().adapter(LoadRequestItem::class.java).toJson(lastRequest))
+        }
+        super.onSaveInstanceState(outState)
+    }
 
     override fun onDetach() {
         compositeDisposable.clear()

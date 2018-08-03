@@ -6,7 +6,6 @@
     android:id="@+id/main_row_item_pane"
     android:clickable="true"
     android:focusable="true"
-    android:background="@drawable/row_activated_background"
     android:descendantFocusability="blocksDescendants"
     >
 

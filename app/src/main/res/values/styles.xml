@@ -16,7 +16,6 @@
         <item name="android:windowBackground">@android:color/white</item>
 
         <item name="listItemColor">?android:attr/colorBackground</item>
-        <item name="listItemColorReleased">@color/grey_20</item>
 
         <item name="android:textColor">@color/grey_200</item>
         <item name="textColorStrong">@color/grey_235</item>
@@ -44,7 +43,6 @@
         <item name="android:colorBackground">@color/grey_215</item>
 
         <item name="listItemColor">?android:attr/colorBackground</item>
-        <item name="listItemColorReleased">@color/grey_170</item>
 
         <item name="android:textColor">@color/grey_30</item>
         <item name="textColorStrong">@color/grey_l5</item>
@@ -56,7 +54,6 @@
         <item name="colorControlNormal">#c5c5c5</item>
         <item name="colorControlActivated">?attr/colorAccent</item>
         <item name="colorControlHighlight">?attr/colorAccent</item>
-
 
     </style>
 

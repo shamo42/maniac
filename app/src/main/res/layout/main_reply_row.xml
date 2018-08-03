@@ -6,8 +6,7 @@
     android:layout_height="wrap_content"
     android:descendantFocusability="blocksDescendants"
     android:clickable="true"
-    android:focusable="true"
-    android:background="@drawable/row_activated_background" >
+    android:focusable="true" >
 
 
     <TextView

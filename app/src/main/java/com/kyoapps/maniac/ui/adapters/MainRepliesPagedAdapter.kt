@@ -6,23 +6,29 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.arch.paging.PagedListAdapter
 import android.content.SharedPreferences
+import android.content.res.Resources
 import android.os.Bundle
 import android.support.v7.util.DiffUtil
 import android.util.Log
 import android.view.View
 import com.kyoapps.maniac.R
+import com.kyoapps.maniac.functions.FuncUi
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.room.entities.ReplyEnt
 import com.kyoapps.maniac.viewmodel.MainVM
 
 
-class MainRepliesPagedAdapter(private val mainVM: MainVM, private val settings: SharedPreferences): PagedListAdapter<ReplyEnt, MainRepliesPagedAdapter.ReplyViewHolder>(DIFF_CALLBACK) {
+class MainRepliesPagedAdapter(private val mainVM: MainVM,
+                              private val colorSelected: Int, private val colorPressed: Int,
+                              private val settings: SharedPreferences):
+        PagedListAdapter<ReplyEnt, MainRepliesPagedAdapter.ReplyViewHolder>(DIFF_CALLBACK) {
 
     private var lastSelectedId = -1L
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReplyViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val view = layoutInflater.inflate(R.layout.main_reply_row, parent, false)
+        view.background = FuncUi.makeSelector(colorSelected, colorPressed)
         return ReplyViewHolder(view)
     }
 
@@ -33,11 +39,13 @@ class MainRepliesPagedAdapter(private val mainVM: MainVM, private val settings: 
             holder.view.isSelected = lastSelectedId == getItemId(position)
         }
 
-        holder.view.setOnClickListener {
+        holder.view.setOnClickListener { _->
             getItem(holder.adapterPosition)?.let {
                 Log.i(TAG, "MainRepliesPagedAdapter clicked thrdid ${it.thrdid} msgid ${it.msgid}")
-
-                mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
+                if (it.msgid.toLong() != lastSelectedId) {
+                    setLastSelected(holder, it.msgid.toLong())
+                    mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
+                }
             }
         }
     }
@@ -67,18 +75,23 @@ class MainRepliesPagedAdapter(private val mainVM: MainVM, private val settings: 
 
     fun getSubjectFromId(id: Long?): String? {
         id?.let {
-            return getItem(getPosFromId(it))?.subject
+            val pos = getPosFromId(it)
+            Log.d(TAG, "itemcount $itemCount, pos $pos")
+            if (pos != -1 && itemCount > pos) return getItem(pos)?.subject
         }
         return null
     }
 
-    fun setlastSelected(id: Long) {
+    fun setLastSelected(holder: ReplyViewHolder?, id: Long) {
         if (lastSelectedId != id) {
+            holder?.view?.isSelected = true
             notifyItemChanged(getPosFromId(lastSelectedId))
             lastSelectedId = id
-            notifyItemChanged(getPosFromId(id))
+            // if (holder == null) refresh row to show it selected
+            if (holder == null) notifyItemChanged(getPosFromId(lastSelectedId))
         }
     }
+
 
 
     companion object {
