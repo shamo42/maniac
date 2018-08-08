@@ -8,6 +8,7 @@ import android.arch.paging.PagedListAdapter
 import android.content.SharedPreferences
 import android.content.res.Resources
 import android.os.Bundle
+import android.os.Handler
 import android.support.v7.util.DiffUtil
 import android.util.Log
 import android.view.View
@@ -66,17 +67,19 @@ class MainRepliesPagedAdapter(private val mainVM: MainVM,
         return -1
     }
 
-    private fun getPosFromId(id: Long): Int {
+
+    fun getPosFromId(id: Long): Int {
         for (i in 0..(itemCount-1)) {
+            if (getItemId(i) == id) Log.d(TAG, "getItemId: ${getItemId(i)} id: $id")
             if (getItemId(i) == id) return i
         }
+        Log.d(TAG, "getItemId: -1 id: $id")
         return -1
     }
 
     fun getSubjectFromId(id: Long?): String? {
-        id?.let {
-            val pos = getPosFromId(it)
-            Log.d(TAG, "itemcount $itemCount, pos $pos")
+        if (id != null && id != -1L) {
+            val pos = getPosFromId(id)
             if (pos != -1 && itemCount > pos) return getItem(pos)?.subject
         }
         return null
@@ -85,7 +88,8 @@ class MainRepliesPagedAdapter(private val mainVM: MainVM,
     fun setLastSelected(holder: ReplyViewHolder?, id: Long) {
         if (lastSelectedId != id) {
             holder?.view?.isSelected = true
-            notifyItemChanged(getPosFromId(lastSelectedId))
+            // remove highlight from last selected row
+            if (lastSelectedId != -1L) notifyItemChanged(getPosFromId(lastSelectedId))
             lastSelectedId = id
             // if (holder == null) refresh row to show it selected
             if (holder == null) notifyItemChanged(getPosFromId(lastSelectedId))

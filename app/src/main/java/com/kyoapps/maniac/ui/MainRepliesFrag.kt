@@ -4,6 +4,7 @@ import android.arch.lifecycle.Observer
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -18,9 +19,12 @@ import com.kyoapps.maniac.dagger.modules.ContextModule
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.ui.adapters.MainRepliesPagedAdapter
 import android.support.annotation.ColorInt
+import android.util.Log
 import android.util.TypedValue
 import com.kyoapps.maniac.functions.FuncParse
 import com.kyoapps.maniac.functions.FuncUi
+import com.kyoapps.maniac.helpers.classes.subOnNewObsOnMain
+import io.reactivex.Single
 
 
 class MainRepliesFrag : Fragment() {
@@ -54,20 +58,29 @@ class MainRepliesFrag : Fragment() {
 
 
         component.mainVM.repliesLiveDataPaged()?.observe(this, Observer { pagedList ->
-                pagedList?.let {
-                if (it.isNotEmpty()) it[0]?.let {
-                    if (component.mainVM.getLatestRequestItem().value?.thrdid != it.thrdid) {
-                        component.mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
+                if (pagedList != null && pagedList.isNotEmpty()) {
+                    adapter.submitList(pagedList)
+
+                    // if opened new thread load first reply
+                    pagedList[0]?.let {
+                        if (component.mainVM.getLatestRequestItem().value?.thrdid != it.thrdid) {
+                            component.mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
+                        }
                     }
+
+                    // scroll to reply pos
+                    lastRequest?.msgid?.let {msgid ->
+                        val pos = adapter.getPosFromId(msgid.toLong())
+                        if (pos > 0) (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 200)
+                    }
+
                 }
-                adapter.submitList(it)
-            }
         })
 
         component.mainVM.getLatestRequestItem().observe(this, Observer { requestItem ->
             requestItem?.let {
                 lastRequest = it
-                if (it.msgid != null) adapter.setLastSelected(null, it.msgid.toLong())
+                if (it.msgid != null)  adapter.setLastSelected(null, it.msgid.toLong())
             }
         })
 
@@ -90,8 +103,8 @@ class MainRepliesFrag : Fragment() {
             ww.settings.defaultFontSize = 14
             ww.setBackgroundColor(backGroundColor)
 
-            component.mainVM.getMessageLiveDataRx()?.observe(this, Observer {
-                it?.data?.let{
+            component.mainVM.getMessageLiveDataRx()?.observe(this, Observer { resource ->
+                resource?.data?.let{
                     val formattedText = FuncParse.formatHtmlLegacy(it, adapter.getSubjectFromId(lastRequest?.msgid?.toLong()), textColor, quoteColor, linkColor, " ")
                     ww.loadData(formattedText, "text/html; charset=utf-8", "UTF-8")
                 }
@@ -101,6 +114,6 @@ class MainRepliesFrag : Fragment() {
 
 
     companion object {
-        //private const val TAG = "MainRepliesFrag"
+        private const val TAG = "MainRepliesFrag"
     }
 }

@@ -1,5 +1,8 @@
 package com.kyoapps.maniac.helpers.classes
 
+import android.arch.lifecycle.LifecycleOwner
+import android.arch.lifecycle.LiveData
+import android.arch.lifecycle.Observer
 import android.util.Log
 import android.view.View
 import android.view.ViewTreeObserver
@@ -131,6 +134,14 @@ fun <T> Flowable<T>.delayEach(mS: Long): Flowable<T> {
 }
 
 
+fun <T> LiveData<T>.observeOnce(lifecycleOwner: LifecycleOwner, observer: Observer<T>) {
+    observeForever(object : Observer<T> {
+        override fun onChanged(t: T?) {
+            observer.onChanged(t)
+            removeObserver(this)
+        }
+    })
+}
 
 inline fun View.doOnPreDraw(crossinline action: (view: View) -> Unit) {
     val vto = viewTreeObserver

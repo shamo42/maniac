@@ -31,6 +31,7 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
 
     //1. Threads
     fun setThreadsRequestItem(loadRequestItem: LoadRequestItem) {
+        Log.d(TAG, "loadRequestItem: ${loadRequestItem.toString()}")
         this.loadThreadsMLD.value = loadRequestItem
     }
 
@@ -46,8 +47,8 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
     fun threadsLiveDataRx(): LiveData<CommonResource<List<ThreadEnt>>>? {
         Log.d(TAG, "threadsLiveData null ${threadsLiveData == null}")
         if (threadsLiveData == null) {
-            threadsLiveData = Transformations.switchMap(loadThreadsMLD) {
-                LiveDataReactiveStreams.fromPublisher(dataSource.getThreadsFromDb(it.brdid)
+            threadsLiveData = Transformations.switchMap(loadThreadsMLD) {loadRequestItem ->
+                LiveDataReactiveStreams.fromPublisher(dataSource.getThreadsFromDb(loadRequestItem.brdid)
                         .map { CommonResource(Status.SUCCESS, it, null) }
                         .onErrorReturn { CommonResource(Status.ERROR, null, it.message) }
                         .subscribeOn(Schedulers.newThread()))
@@ -75,6 +76,7 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
                     .setPrefetchDistance(10)
                     .build()
             repliesPagedLiveData = Transformations.switchMap(loadRepliesMLD) {
+                //setMessageRequestItem(it)
                 LivePagedListBuilder(dataSource.getRepliesPagedFromDb(it.thrdid!!), pagedListConfig)
                         .build()
             }

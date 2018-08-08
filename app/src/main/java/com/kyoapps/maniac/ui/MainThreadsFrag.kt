@@ -3,6 +3,7 @@ package com.kyoapps.maniac.ui
 import android.arch.lifecycle.Observer
 import android.content.Context
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.support.annotation.ColorInt
@@ -28,6 +29,7 @@ import com.squareup.moshi.Moshi
 import io.reactivex.disposables.CompositeDisposable
 import android.widget.ArrayAdapter
 import com.kyoapps.maniac.functions.FuncUi
+import com.kyoapps.maniac.helpers.classes.observeOnce
 import com.kyoapps.maniac.helpers.classes.pojo.Board
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
@@ -39,7 +41,7 @@ class MainThreadsFrag : Fragment() {
     private lateinit var compositeDisposable: CompositeDisposable
     private var lastRequest: LoadRequestItem? = null
     private var requestThreadsLayoutRefresh = true
-    private var openPane = false
+    private var loadBoard = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(true)
@@ -62,9 +64,10 @@ class MainThreadsFrag : Fragment() {
 
         Log.d(TAG, "savedInstanceState == null: ${savedInstanceState == null}")
         if (savedInstanceState == null) {
+
             // load deeplink if present. Else load last opened
             if (arguments?.get("mode") != null) {
-                loadDeeplink(arguments?.get("mode") as String)
+                loadDeepLink(arguments?.get("mode") as String)
             } else {
                 lastRequest?.let {
                     initBoardSpinner(it)
@@ -72,13 +75,7 @@ class MainThreadsFrag : Fragment() {
                     loadFromDb(it)
                 }
             }
-        } else {
-            savedInstanceState.getString(C_SETTINGS.PREVIOUS_REQUEST, null)?.let { request ->
-                lastRequest = Moshi.Builder().build().adapter(LoadRequestItem::class.java).fromJson(request)
-                lastRequest?.let { loadFromDb(it) }
-            }
-            initBoardSpinner(lastRequest)
-        }
+        } else { initBoardSpinner(lastRequest) }
 
 
         val recyclerView: RecyclerView = view.findViewById(R.id.rv_threads)
@@ -87,7 +84,9 @@ class MainThreadsFrag : Fragment() {
 
         val slidingPaneLayout: SlidingPaneLayout? = activity?.findViewById(R.id.pane_main)
 
-        @ColorInt val colorPressed = context?.resources?.getColor(R.color.grey_trans_2)?: Color.GRAY
+        @ColorInt val colorPressed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            context?.resources?.getColor(R.color.grey_trans_2, activity?.theme)?: Color.GRAY
+        } else { context?.resources?.getColor(R.color.grey_trans_2)?: Color.GRAY }
 
         val adapter: MainThreadsAdapter? = MainThreadsAdapter(slidingPaneLayout, component.mainVM, component.mainDS,
                 FuncUi.getAttrColorData(context, R.attr.colorPrimary), colorPressed,
@@ -98,10 +97,19 @@ class MainThreadsFrag : Fragment() {
         component.mainVM.threadsLiveDataRx()?.observe(this, Observer { commonResource ->
             // delay load for smoother animation. load immediately if slidingPane already open
                 commonResource?.data?.let {
+                    //Log.d(TAG, "lastRequest brdid: ${lastRequest?.brdid} actual brdid ${it.first().brdid}")
                     if (it.isNotEmpty() && requestThreadsLayoutRefresh) {
                         requestThreadsLayoutRefresh = false
                         if (slidingPaneLayout?.isOpen == true) adapter?.submitList(it)
-                        else Handler().postDelayed({ adapter?.submitList(it) }, 400)
+                        else Handler().postDelayed({
+                            adapter?.submitList(it)
+
+                            // scroll to thread pos
+                            lastRequest?.thrdid?.let {thrdid ->
+                                val pos = adapter?.getPosFromId(thrdid.toLong())?: 0
+                                if (pos > 0) (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 200)
+                            }
+                        }, 400)
                     }
                 }
         })
@@ -132,7 +140,7 @@ class MainThreadsFrag : Fragment() {
         return super.onOptionsItemSelected(item)
     }
 
-    private fun loadDeeplink(deeplink: String) {
+    private fun loadDeepLink(deeplink: String) {
         Log.i(TAG, "deeplink $deeplink")
         compositeDisposable.add(component.mainDS.parseManiacUrl(deeplink)
                 .filter { it.brdid.toInt() != -1 && it.thrdid != -1 }
@@ -153,10 +161,9 @@ class MainThreadsFrag : Fragment() {
 
     private fun fetchOnline(requestItem: LoadRequestItem) {
         Log.i(TAG, "fetchOnline brd ${requestItem.brdid} thrd ${requestItem.thrdid} msg ${requestItem.msgid}")
-        updateBoards(requestItem)
+        if (requestItem.msgid != null) component.mainVM.setMessageRequestItem(requestItem)
         FuncFetch.fetchThreads(component.mainDS, requestItem)
         FuncFetch.fetchReplies(component.mainDS, requestItem)
-        if (requestItem.msgid != null) component.mainVM.setMessageRequestItem(requestItem)
     }
 
     private fun initBoardSpinner(requestItem: LoadRequestItem?) {
@@ -167,7 +174,7 @@ class MainThreadsFrag : Fragment() {
     }
 
     private fun updateBoards(loadRequestItem: LoadRequestItem) {
-        component.mainVM.getBoardsLiveDataRx()?.observe(this, Observer {
+        component.mainVM.getBoardsLiveDataRx()?.observeOnce(this, Observer {
             it?.data?.let { list ->
                 val spinner: Spinner? = activity?.findViewById(R.id.sp_boards)
                 setSpinner(spinner, list, loadRequestItem)
@@ -179,11 +186,14 @@ class MainThreadsFrag : Fragment() {
 
     private fun setSpinner(spinner: Spinner?, boardList: List<Board>, requestItem: LoadRequestItem?) {
         spinner?.adapter = ArrayAdapter(activity, R.layout.main_spinner, boardList.map { it.label })
-        if (boardList.map { it.brdid }.contains(requestItem?.brdid)) { spinner?.setSelection(boardList.map { it.brdid }.indexOf(requestItem?.brdid)) }
+        if (boardList.map { it.brdid }.contains(requestItem?.brdid)) {
+            Log.d(TAG, "spinner set true")
+            spinner?.setSelection(boardList.map { it.brdid }.indexOf(requestItem?.brdid))
+        }
 
-        // only open pane if user selects board manually
+        // only load if user selects board manually
         spinner?.setOnTouchListener { _, _ ->
-            openPane = true
+            loadBoard = true
             return@setOnTouchListener false
         }
 
@@ -191,25 +201,22 @@ class MainThreadsFrag : Fragment() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 Log.d(TAG,  "spinner")
                 requestThreadsLayoutRefresh = true
-                if (openPane) {
+                if (loadBoard) {
                     activity?.findViewById<SlidingPaneLayout>(R.id.pane_main)?.openPane()
-                    openPane = false
+                    loadBoard = false
+                    val loadThreadsRequest = LoadRequestItem(boardList[position].brdid, null, null)
+                    //val loadThreadsRequest = lastRequest!!
+                    Log.d(TAG, "loadRequestItem 0: $loadThreadsRequest")
+
+                    component.mainVM.setThreadsRequestItem(loadThreadsRequest)
+                    FuncFetch.fetchThreads(component.mainDS, loadThreadsRequest)
                 }
-                val loadThreadsRequest = LoadRequestItem(boardList[position].brdid, null, null)
-                component.mainVM.setThreadsRequestItem(loadThreadsRequest)
-                FuncFetch.fetchThreads(component.mainDS, loadThreadsRequest)
+
             }
             override fun onNothingSelected(parent: AdapterView<*>?) { }
         }
     }
 
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.run {
-            putString(C_SETTINGS.PREVIOUS_REQUEST, Moshi.Builder().build().adapter(LoadRequestItem::class.java).toJson(lastRequest))
-        }
-        super.onSaveInstanceState(outState)
-    }
 
     override fun onDetach() {
         compositeDisposable.clear()

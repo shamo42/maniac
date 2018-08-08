@@ -73,7 +73,7 @@ class MainThreadsAdapter(private val slidingPaneLayout: SlidingPaneLayout?, priv
         return getItem(position).thrdid.toLong()
     }
 
-    private fun getPosFromId(id: Long): Int {
+    fun getPosFromId(id: Long): Int {
         for (i in 0..(itemCount-1)) {
             if (getItemId(i) == id) return i
         }
@@ -83,7 +83,8 @@ class MainThreadsAdapter(private val slidingPaneLayout: SlidingPaneLayout?, priv
     fun setLastSelected(holder: ThreadViewHolder?, id: Long) {
         if (lastSelectedId != id) {
             holder?.view?.isSelected = true
-            notifyItemChanged(getPosFromId(lastSelectedId))
+            // remove highlight from last selected row
+            if (lastSelectedId != -1L) notifyItemChanged(getPosFromId(lastSelectedId))
             lastSelectedId = id
             // if (holder == null) refresh row to show it selected
             if (holder == null) notifyItemChanged(getPosFromId(lastSelectedId))
