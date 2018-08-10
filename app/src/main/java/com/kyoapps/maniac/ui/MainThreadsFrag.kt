@@ -75,6 +75,7 @@ class MainThreadsFrag : Fragment() {
                     initBoardSpinner(it)
                     fetchOnline(it)
                     loadFromDb(it)
+                    Handler().postDelayed({updateBoards(it)}, 500)
                 }
             }
         } else { initBoardSpinner(lastRequest) }
