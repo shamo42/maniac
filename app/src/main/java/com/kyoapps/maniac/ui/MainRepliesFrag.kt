@@ -4,7 +4,6 @@ import android.arch.lifecycle.Observer
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -19,18 +18,17 @@ import com.kyoapps.maniac.dagger.modules.ContextModule
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.ui.adapters.MainRepliesPagedAdapter
 import android.support.annotation.ColorInt
-import android.util.Log
+import android.support.v4.widget.SwipeRefreshLayout
 import android.util.TypedValue
 import com.kyoapps.maniac.functions.FuncParse
 import com.kyoapps.maniac.functions.FuncUi
-import com.kyoapps.maniac.helpers.classes.subOnNewObsOnMain
-import io.reactivex.Single
 
 
 class MainRepliesFrag : Fragment() {
 
     private lateinit var component: ActivityComponent
     private var lastRequest: LoadRequestItem? = null
+    private var scrollToLastPos = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -45,7 +43,6 @@ class MainRepliesFrag : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-
         // get reply list and fetch first reply
         val recyclerView: RecyclerView = view.findViewById(R.id.rv_replies)
         recyclerView.layoutManager = LinearLayoutManager(activity)
@@ -58,23 +55,25 @@ class MainRepliesFrag : Fragment() {
 
 
         component.mainVM.repliesLiveDataPaged()?.observe(this, Observer { pagedList ->
-                if (pagedList != null && pagedList.isNotEmpty()) {
-                    adapter.submitList(pagedList)
+            activity?.findViewById<SwipeRefreshLayout>(R.id.str_replies)?.isRefreshing = false
+            if (pagedList != null && pagedList.isNotEmpty()) {
+                adapter.submitList(pagedList)
 
-                    // if opened new thread load first reply
-                    pagedList[0]?.let {
-                        if (component.mainVM.getLatestRequestItem().value?.thrdid != it.thrdid) {
-                            component.mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
-                        }
+                // if opened new thread load first reply
+                pagedList[0]?.let {
+                    if (component.mainVM.getLatestRequestItem().value?.thrdid != it.thrdid) {
+                        component.mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
                     }
+                }
 
-                    // scroll to reply pos
-                    lastRequest?.msgid?.let {msgid ->
+                if (scrollToLastPos) {
+                    lastRequest?.msgid?.let { msgid ->
                         val pos = adapter.getPosFromId(msgid.toLong())
                         if (pos > 0) (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 200)
                     }
-
                 }
+                //scrollToLastPos = true
+            }
         })
 
         component.mainVM.getLatestRequestItem().observe(this, Observer { requestItem ->
@@ -83,6 +82,11 @@ class MainRepliesFrag : Fragment() {
                 if (it.msgid != null)  adapter.setLastSelected(null, it.msgid.toLong())
             }
         })
+
+        activity?.findViewById<SwipeRefreshLayout>(R.id.str_replies)?.setOnRefreshListener {
+            scrollToLastPos = false
+            if (lastRequest != null) component.mainVM.setRepliesRequestItem(lastRequest!!)
+        }
 
 
         val webView = activity?.findViewById<WebView>(R.id.ww_main)

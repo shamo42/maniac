@@ -9,6 +9,7 @@ import android.os.Handler
 import android.support.annotation.ColorInt
 import android.support.v4.app.Fragment
 import android.support.v4.widget.SlidingPaneLayout
+import android.support.v4.widget.SwipeRefreshLayout
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -42,6 +43,8 @@ class MainThreadsFrag : Fragment() {
     private var lastRequest: LoadRequestItem? = null
     private var requestThreadsLayoutRefresh = true
     private var loadBoard = false
+    private var requestOpenPane = false
+    private var scrollToLastPos = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(true)
@@ -64,7 +67,6 @@ class MainThreadsFrag : Fragment() {
 
         Log.d(TAG, "savedInstanceState == null: ${savedInstanceState == null}")
         if (savedInstanceState == null) {
-
             // load deeplink if present. Else load last opened
             if (arguments?.get("mode") != null) {
                 loadDeepLink(arguments?.get("mode") as String)
@@ -95,21 +97,23 @@ class MainThreadsFrag : Fragment() {
         recyclerView.adapter = adapter
 
         component.mainVM.threadsLiveDataRx()?.observe(this, Observer { commonResource ->
-            // delay load for smoother animation. load immediately if slidingPane already open
-                commonResource?.data?.let {
+                activity?.findViewById<SwipeRefreshLayout>(R.id.str_threads)?.isRefreshing = false
+                commonResource?.data?.let { list ->
                     //Log.d(TAG, "lastRequest brdid: ${lastRequest?.brdid} actual brdid ${it.first().brdid}")
-                    if (it.isNotEmpty() && requestThreadsLayoutRefresh) {
+                    if (list.isNotEmpty() && requestThreadsLayoutRefresh) {
                         requestThreadsLayoutRefresh = false
-                        if (slidingPaneLayout?.isOpen == true) adapter?.submitList(it)
-                        else Handler().postDelayed({
-                            adapter?.submitList(it)
-
-                            // scroll to thread pos
-                            lastRequest?.thrdid?.let {thrdid ->
-                                val pos = adapter?.getPosFromId(thrdid.toLong())?: 0
-                                if (pos > 0) (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 200)
+                        adapter?.submitList(list)
+                        if (scrollToLastPos) {
+                            lastRequest?.thrdid?.let { thrdid ->
+                                val pos = adapter?.getPosFromId(thrdid.toLong()) ?: 0
+                                if (pos > 0) (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 500)
                             }
-                        }, 400)
+                        }
+                        // delay load for smoother animation
+                        if (requestOpenPane) {
+                            requestOpenPane = false
+                            Handler().postDelayed({ slidingPaneLayout?.openPane()}, 600)
+                        }
                     }
                 }
         })
@@ -121,6 +125,12 @@ class MainThreadsFrag : Fragment() {
                 lastRequest = it
                }
         })
+
+        //swipe to refresh
+        activity?.findViewById<SwipeRefreshLayout>(R.id.str_threads)?.setOnRefreshListener{
+            scrollToLastPos = false
+            if (lastRequest != null) FuncFetch.fetchThreads(component.mainDS, lastRequest!!, false)
+        }
 
     }
 
@@ -162,7 +172,7 @@ class MainThreadsFrag : Fragment() {
     private fun fetchOnline(requestItem: LoadRequestItem) {
         Log.i(TAG, "fetchOnline brd ${requestItem.brdid} thrd ${requestItem.thrdid} msg ${requestItem.msgid}")
         if (requestItem.msgid != null) component.mainVM.setMessageRequestItem(requestItem)
-        FuncFetch.fetchThreads(component.mainDS, requestItem)
+        FuncFetch.fetchThreads(component.mainDS, requestItem, true)
         FuncFetch.fetchReplies(component.mainDS, requestItem)
     }
 
@@ -199,19 +209,15 @@ class MainThreadsFrag : Fragment() {
 
         spinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                Log.d(TAG,  "spinner")
                 requestThreadsLayoutRefresh = true
                 if (loadBoard) {
-                    activity?.findViewById<SlidingPaneLayout>(R.id.pane_main)?.openPane()
                     loadBoard = false
+                    requestOpenPane = true
                     val loadThreadsRequest = LoadRequestItem(boardList[position].brdid, null, null)
-                    //val loadThreadsRequest = lastRequest!!
-                    Log.d(TAG, "loadRequestItem 0: $loadThreadsRequest")
 
+                    FuncFetch.fetchThreads(component.mainDS, loadThreadsRequest, true)
                     component.mainVM.setThreadsRequestItem(loadThreadsRequest)
-                    FuncFetch.fetchThreads(component.mainDS, loadThreadsRequest)
                 }
-
             }
             override fun onNothingSelected(parent: AdapterView<*>?) { }
         }

@@ -37,17 +37,17 @@ class MainDS(private val maniacApiLEGACY: ManiacApiLEGACY, private val threadDao
 
     fun fetchThreadsIntoDb(brdid: Short): Single<Boolean> {
         return getThreads(brdid)
-                .map {
-                    val oldThrdMap: HashMap<Int, ThreadEnt> = HashMap(it.size)
+                .map {list ->
+                    val oldThrdMap: HashMap<Int, ThreadEnt> = HashMap(list.size)
                     threadDao.getAll().forEach { oldThrdMap[it.thrdid] = it }
-                    it.forEach {
+                    list.forEach {
                         if (oldThrdMap.containsKey(it.thrdid)) {
                             it.hide = oldThrdMap[it.thrdid]!!.hide
                             it.oldReplies = oldThrdMap[it.thrdid]!!.totalReplies
                         }
                     }
                     threadDao.delete(brdid)
-                    threadDao.insertAll(it)
+                    threadDao.insertAll(list)
                 }
                 .map { threadDao.count(brdid) > 0 }
     }
@@ -64,11 +64,11 @@ class MainDS(private val maniacApiLEGACY: ManiacApiLEGACY, private val threadDao
 
     fun fetchRepliesIntoDb(brdid: Short, thrdid: Int): Single<Boolean> {
         return getReplies(brdid, thrdid)
-                .map {
+                .map {list ->
                     val oldReplyList= replyDao.getReadTuples(thrdid).map { it.msgid }
-                    it.forEach { if (oldReplyList.contains(it.msgid)) it.clicked = true  }
+                    list.forEach { if (oldReplyList.contains(it.msgid)) it.clicked = true  }
                     replyDao.delete(thrdid)
-                    replyDao.insertAll(it)
+                    replyDao.insertAll(list)
                 }
                 .map {
                     val count = replyDao.count(thrdid)

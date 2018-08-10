@@ -4,10 +4,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/tb_main"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark">
+        <Spinner
+            android:id="@+id/sp_boards"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </android.support.v7.widget.Toolbar>
+
+
     <android.support.v4.widget.SlidingPaneLayout
         android:id="@+id/pane_main"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_below="@+id/tb_main"
+        >
 
         <!--The first child view becomes the left pane. When the combined
              desired width (expressed using android:layout_width) would
@@ -34,17 +49,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical">
-            <android.support.v7.widget.Toolbar
-                android:id="@+id/tb_main"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="?attr/colorPrimary"
-                android:theme="@style/ThemeOverlay.AppCompat.Dark">
-                <Spinner
-                    android:id="@+id/sp_boards"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
-            </android.support.v7.widget.Toolbar>
+
 
             <WebView
                 android:id="@+id/ww_main"
