@@ -20,7 +20,7 @@ interface ReplyDao {
     @Insert
     fun insertAll(replyEntList: List<ReplyEnt>)
 
-    @Query("SELECT $COLUMN_MSGID FROM $TABLE_NAME WHERE $COLUMN_THRDID = :thrdid")
+    @Query("SELECT $COLUMN_MSGID FROM $TABLE_NAME WHERE $COLUMN_THRDID = :thrdid AND $COLUMN_READ")
     fun getReadTuples(thrdid: Int): List<ReplyEntReadTuple>
 
     @Query("SELECT * FROM $TABLE_NAME WHERE $COLUMN_THRDID = :thrdid ORDER BY $COLUMN_FETCH_TIME")
@@ -54,6 +54,7 @@ interface ReplyDao {
         const val COLUMN_THRDID = "thrdid"
         const val COLUMN_MSGID = "msgid"
         const val COLUMN_FETCH_TIME = "fetchTime"
+        const val COLUMN_READ = "read"
     }
 
 

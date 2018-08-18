@@ -10,7 +10,7 @@ import com.kyoapps.maniac.room.entities.ReplyEnt
 import com.kyoapps.maniac.room.entities.ThreadEnt
 
 
-@Database(entities = [(ThreadEnt::class), (ReplyEnt::class)], version = 31, exportSchema = false)
+@Database(entities = [(ThreadEnt::class), (ReplyEnt::class)], version = 32, exportSchema = false)
 
 abstract class DatabaseDefault : RoomDatabase() {
     abstract fun threadDao(): ThreadDao

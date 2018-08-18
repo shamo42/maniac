@@ -13,6 +13,6 @@ data class ReplyEnt(
         val subject: String,
         val user: String,
         val replyTime: String,
-        var clicked: Boolean,
+        var read: Boolean,
         val fetchTime: Long
 )

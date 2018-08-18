@@ -2,7 +2,6 @@ package com.kyoapps.maniac.ui
 
 import android.arch.lifecycle.Observer
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
@@ -20,15 +19,20 @@ import com.kyoapps.maniac.ui.adapters.MainRepliesPagedAdapter
 import android.support.annotation.ColorInt
 import android.support.v4.widget.SwipeRefreshLayout
 import android.util.TypedValue
+import android.webkit.WebResourceRequest
 import com.kyoapps.maniac.functions.FuncParse
-import com.kyoapps.maniac.functions.FuncUi
+import android.webkit.WebViewClient
+import android.content.Intent
+import android.net.Uri
+
+
 
 
 class MainRepliesFrag : Fragment() {
 
     private lateinit var component: ActivityComponent
     private var lastRequest: LoadRequestItem? = null
-    private var scrollToLastPos = true
+    private var newThread = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -47,15 +51,13 @@ class MainRepliesFrag : Fragment() {
         val recyclerView: RecyclerView = view.findViewById(R.id.rv_replies)
         recyclerView.layoutManager = LinearLayoutManager(activity)
         recyclerView.setHasFixedSize(true)
+        //recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, LinearLayoutManager.VERTICAL))
 
-        @ColorInt val colorPressed = context?.resources?.getColor(R.color.grey_trans_2) ?: Color.GRAY
-
-        val adapter = MainRepliesPagedAdapter(component.mainVM, FuncUi.getAttrColorData(context, R.attr.colorPrimary), colorPressed, component.defaultSettings)
+        val adapter = MainRepliesPagedAdapter(context, component as DaggerActivityComponent)
         recyclerView.adapter = adapter
 
-
         component.mainVM.repliesLiveDataPaged()?.observe(this, Observer { pagedList ->
-            activity?.findViewById<SwipeRefreshLayout>(R.id.str_replies)?.isRefreshing = false
+            activity?.findViewById<SwipeRefreshLayout>(R.id.srl_replies)?.isRefreshing = false
             if (pagedList != null && pagedList.isNotEmpty()) {
                 adapter.submitList(pagedList)
 
@@ -66,25 +68,24 @@ class MainRepliesFrag : Fragment() {
                     }
                 }
 
-                if (scrollToLastPos) {
+                if (newThread) {
                     lastRequest?.msgid?.let { msgid ->
                         val pos = adapter.getPosFromId(msgid.toLong())
                         if (pos > 0) (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 200)
                     }
                 }
-                //scrollToLastPos = true
             }
         })
 
         component.mainVM.getLatestRequestItem().observe(this, Observer { requestItem ->
             requestItem?.let {
+                newThread = it.thrdid != lastRequest?.thrdid
                 lastRequest = it
                 if (it.msgid != null)  adapter.setLastSelected(null, it.msgid.toLong())
             }
         })
 
-        activity?.findViewById<SwipeRefreshLayout>(R.id.str_replies)?.setOnRefreshListener {
-            scrollToLastPos = false
+        activity?.findViewById<SwipeRefreshLayout>(R.id.srl_replies)?.setOnRefreshListener {
             if (lastRequest != null) component.mainVM.setRepliesRequestItem(lastRequest!!)
         }
 
@@ -106,6 +107,20 @@ class MainRepliesFrag : Fragment() {
             ww.settings.javaScriptEnabled = true
             ww.settings.defaultFontSize = 14
             ww.setBackgroundColor(backGroundColor)
+
+
+            ww.webViewClient = object : WebViewClient() {
+
+                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                        request?.url?.toString().let { url ->
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            startActivity(intent)
+                        }
+                    return true
+                }
+
+                override fun onPageFinished(view: WebView, url: String) { component.mainVM.setIsLoadingMsg(false) }
+            }
 
             component.mainVM.getMessageLiveDataRx()?.observe(this, Observer { resource ->
                 resource?.data?.let{

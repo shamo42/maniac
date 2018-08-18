@@ -66,7 +66,13 @@ class MainDS(private val maniacApiLEGACY: ManiacApiLEGACY, private val threadDao
         return getReplies(brdid, thrdid)
                 .map {list ->
                     val oldReplyList= replyDao.getReadTuples(thrdid).map { it.msgid }
-                    list.forEach { if (oldReplyList.contains(it.msgid)) it.clicked = true  }
+                    list.forEach {
+                        Log.d(TAG, "test: ${oldReplyList.size}")
+
+                        Log.d(TAG, "contains msgid: ${oldReplyList.contains(it.msgid)}")
+                        if (oldReplyList.contains(it.msgid)) it.read = true
+                    }
+                    list.forEach { Log.d(TAG, "read?: ${it.subject} ${it.read}")}
                     replyDao.delete(thrdid)
                     replyDao.insertAll(list)
                 }
@@ -75,6 +81,12 @@ class MainDS(private val maniacApiLEGACY: ManiacApiLEGACY, private val threadDao
                     Log.d(TAG, "fetchRepliesIntoDb($brdid, $thrdid) count: $count")
                     count > 0
                 }
+    }
+
+    fun markReplyReadDb(replyEnt: ReplyEnt): Single<Int> {
+        return Single.just(replyEnt)
+                .map { it.read = true;it}
+                .map { replyDao.update(it) }
     }
 
     /*fun getRepliesFromDb(thrdid: Int): Flowable<List<ReplyEnt>> {

@@ -7,10 +7,10 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "com.kyoapps.maniac"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 27
-        versionCode 3
-        versionName "3.0.0 alpha 3"
+        versionCode 4
+        versionName "3.0.0 alpha 4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -84,6 +84,9 @@ dependencies {
     kapt "com.google.dagger:dagger-compiler:$rootProject.daggerVersion"
     implementation "com.google.dagger:dagger-android-support:$rootProject.daggerVersion"
     kapt "com.google.dagger:dagger-android-processor:$rootProject.daggerVersion"
+
+    // Ui
+    implementation "com.github.castorflex.smoothprogressbar:library:$rootProject.smoothProgressbarVersion"
 
     // Android State
     //implementation "com.evernote:android-state:$rootProject.androidState"

@@ -5,31 +5,41 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.arch.paging.PagedListAdapter
+import android.content.Context
 import android.content.SharedPreferences
-import android.content.res.Resources
+import android.graphics.Color
 import android.os.Bundle
-import android.os.Handler
+import android.support.annotation.ColorInt
 import android.support.v7.util.DiffUtil
 import android.util.Log
 import android.view.View
 import com.kyoapps.maniac.R
+import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
 import com.kyoapps.maniac.functions.FuncUi
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.room.entities.ReplyEnt
-import com.kyoapps.maniac.viewmodel.MainVM
+import io.reactivex.schedulers.Schedulers
 
 
-class MainRepliesPagedAdapter(private val mainVM: MainVM,
-                              private val colorSelected: Int, private val colorPressed: Int,
-                              private val settings: SharedPreferences):
+class MainRepliesPagedAdapter(context: Context?, private val component: DaggerActivityComponent):
         PagedListAdapter<ReplyEnt, MainRepliesPagedAdapter.ReplyViewHolder>(DIFF_CALLBACK) {
 
     private var lastSelectedId = -1L
 
+    @ColorInt private val colorSelected = FuncUi.getAttrColorData(context, R.attr.colorPrimary)
+    @ColorInt private val colorNotSelectedUnread = context?.resources?.getColor(R.color.grey_trans_2) ?: Color.GRAY
+    @ColorInt private val textColorNotSelectedUnread = FuncUi.getAttrColorData(context, R.attr.textColorStrong)
+    @ColorInt private val textColorNotSelectedRead = FuncUi.getAttrColorData(context, R.attr.textColorDim)
+    private val textBackgroundUnread = FuncUi.makeColorStateList(Color.WHITE, Color.WHITE, textColorNotSelectedUnread)
+    private val textBackgroundRead = FuncUi.makeColorStateList(Color.WHITE, Color.WHITE, textColorNotSelectedRead)
+
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReplyViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val view = layoutInflater.inflate(R.layout.main_reply_row, parent, false)
-        view.background = FuncUi.makeSelector(colorSelected, colorPressed)
+
+        view.background = FuncUi.makeSelector(colorSelected, colorSelected, colorNotSelectedUnread)
+
         return ReplyViewHolder(view)
     }
 
@@ -37,15 +47,20 @@ class MainRepliesPagedAdapter(private val mainVM: MainVM,
         val replyEnt = getItem(position)
         if (replyEnt != null) {
             holder.bindTo(replyEnt)
+            holder.title.setTextColor(if (replyEnt.read) textBackgroundRead else textBackgroundUnread)
+            holder.user.setTextColor(if (replyEnt.read) textBackgroundRead else textBackgroundUnread)
             holder.view.isSelected = lastSelectedId == getItemId(position)
         }
 
         holder.view.setOnClickListener { _->
             getItem(holder.adapterPosition)?.let {
-                Log.i(TAG, "MainRepliesPagedAdapter clicked thrdid ${it.thrdid} msgid ${it.msgid}")
+                Log.i(TAG, "MainRepliesPagedAdapter read thrdid ${it.thrdid} msgid ${it.msgid}")
                 if (it.msgid.toLong() != lastSelectedId) {
                     setLastSelected(holder, it.msgid.toLong())
-                    mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
+                    component.mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
+                    component.mainDS.markReplyReadDb(it)
+                            .subscribeOn(Schedulers.newThread())
+                            .subscribe({i -> Log.d(TAG, "markReplyReadDb $i")}, { t-> t.printStackTrace()})
                 }
             }
         }
@@ -58,7 +73,7 @@ class MainRepliesPagedAdapter(private val mainVM: MainVM,
 
         fun bindTo(replyEnt: ReplyEnt) {
             title.text = replyEnt.subject
-            user.text = replyEnt.user
+            user.text = "${replyEnt.user} - ${replyEnt.replyTime}"
         }
     }
 
@@ -91,7 +106,7 @@ class MainRepliesPagedAdapter(private val mainVM: MainVM,
             // remove highlight from last selected row
             if (lastSelectedId != -1L) notifyItemChanged(getPosFromId(lastSelectedId))
             lastSelectedId = id
-            // if (holder == null) refresh row to show it selected
+            // refresh row to show it selected if (holder == null)
             if (holder == null) notifyItemChanged(getPosFromId(lastSelectedId))
         }
     }
@@ -110,14 +125,14 @@ class MainRepliesPagedAdapter(private val mainVM: MainVM,
                     oldReply.subject == newReply.subject
                             && oldReply.user == newReply.user
                             && oldReply.replyTime == newReply.replyTime
-                            && oldReply.clicked == newReply.clicked
+                            && oldReply.read == newReply.read
 
             override fun getChangePayload(oldItem: ReplyEnt?, newItem: ReplyEnt?): Any? {
                 val diffBundle = Bundle()
                 if (newItem?.subject != oldItem?.subject)  diffBundle.putString("KEY_SUBJECT", newItem?.subject)
                 if (newItem?.user != oldItem?.user) diffBundle.putString("KEY_USER", newItem?.user)
                 if (newItem?.replyTime != oldItem?.replyTime) diffBundle.putString("KEY_TIMESTAMP", newItem?.replyTime)
-                if (newItem?.clicked != oldItem?.clicked) diffBundle.putBoolean("KEY_CLICKED", newItem?.clicked?: false)
+                if (newItem?.read != oldItem?.read) diffBundle.putBoolean("KEY_READ", newItem?.read?: false)
                 if (diffBundle.size() == 0) return null
                 return diffBundle
             }
