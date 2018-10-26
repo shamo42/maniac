@@ -1,8 +1,8 @@
 package com.kyoapps.maniac.helpers.classes
 
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.Observer
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
 import android.util.Log
 import android.view.View
 import android.view.ViewTreeObserver

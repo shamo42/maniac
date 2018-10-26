@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/tv_main_reply_user"
         android:singleLine="true"
-        android:textSize="15sp"
+        android:textSize="14sp"
         android:layout_alignParentBottom="true"
         android:paddingLeft="8dp"
         android:paddingRight="6dp"

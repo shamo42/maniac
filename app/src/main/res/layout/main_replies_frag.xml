@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.v4.widget.SwipeRefreshLayout
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/str_replies"
+    android:id="@+id/srl_replies"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_replies"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scrollbars="vertical" />
-</android.support.v4.widget.SwipeRefreshLayout>
+        android:scrollbars="vertical"
+        android:background="?attr/listItemColor" />
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

@@ -1,6 +1,6 @@
 package com.kyoapps.maniac.viewmodel
 
-import android.arch.paging.DataSource
+import androidx.paging.DataSource
 import android.util.Log
 import com.kyoapps.maniac.api.ManiacApiLEGACY
 import com.kyoapps.maniac.functions.FuncParse
@@ -66,7 +66,13 @@ class MainDS(private val maniacApiLEGACY: ManiacApiLEGACY, private val threadDao
         return getReplies(brdid, thrdid)
                 .map {list ->
                     val oldReplyList= replyDao.getReadTuples(thrdid).map { it.msgid }
-                    list.forEach { if (oldReplyList.contains(it.msgid)) it.clicked = true  }
+                    list.forEach {
+                        Log.d(TAG, "test: ${oldReplyList.size}")
+
+                        Log.d(TAG, "contains msgid: ${oldReplyList.contains(it.msgid)}")
+                        if (oldReplyList.contains(it.msgid)) it.read = true
+                    }
+                    list.forEach { Log.d(TAG, "read?: ${it.subject} ${it.read}")}
                     replyDao.delete(thrdid)
                     replyDao.insertAll(list)
                 }
@@ -75,6 +81,16 @@ class MainDS(private val maniacApiLEGACY: ManiacApiLEGACY, private val threadDao
                     Log.d(TAG, "fetchRepliesIntoDb($brdid, $thrdid) count: $count")
                     count > 0
                 }
+    }
+
+    fun markReplyReadDb(replyEnt: ReplyEnt): Single<Int> {
+        return Single.just(replyEnt)
+                .map { it.read = true;it}
+                .map { replyDao.update(it) }
+    }
+    fun markRepliesReadDb(replyEntList: List<ReplyEnt>): Single<Int> {
+        return Single.just(replyEntList)
+                .map { replyDao.updateAll(it) }
     }
 
     /*fun getRepliesFromDb(thrdid: Int): Flowable<List<ReplyEnt>> {

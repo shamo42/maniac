@@ -1,6 +1,6 @@
 package com.kyoapps.maniac.room.dao
 
-import android.arch.persistence.room.*
+import androidx.room.*
 import com.kyoapps.maniac.room.entities.ThreadEnt
 import io.reactivex.Flowable
 

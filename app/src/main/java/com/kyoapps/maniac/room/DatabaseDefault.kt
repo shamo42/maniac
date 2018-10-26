@@ -1,8 +1,8 @@
 package com.kyoapps.maniac.room
 
-import android.arch.persistence.room.Database
-import android.arch.persistence.room.Room
-import android.arch.persistence.room.RoomDatabase
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
 import android.content.Context
 import com.kyoapps.maniac.room.dao.ReplyDao
 import com.kyoapps.maniac.room.dao.ThreadDao
@@ -10,7 +10,7 @@ import com.kyoapps.maniac.room.entities.ReplyEnt
 import com.kyoapps.maniac.room.entities.ThreadEnt
 
 
-@Database(entities = [(ThreadEnt::class), (ReplyEnt::class)], version = 31, exportSchema = false)
+@Database(entities = [(ThreadEnt::class), (ReplyEnt::class)], version = 32, exportSchema = false)
 
 abstract class DatabaseDefault : RoomDatabase() {
     abstract fun threadDao(): ThreadDao

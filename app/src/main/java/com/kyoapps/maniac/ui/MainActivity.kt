@@ -1,13 +1,16 @@
 package com.kyoapps.maniac.ui
 
+import androidx.lifecycle.Observer
 import android.content.res.Resources
 import android.os.Bundle
-import android.support.v4.widget.DrawerLayout
-import android.support.v4.widget.SlidingPaneLayout
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.Toolbar
+import android.os.Looper
+import androidx.drawerlayout.widget.DrawerLayout
+import androidx.slidingpanelayout.widget.SlidingPaneLayout
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import android.util.Log
 import android.util.TypedValue
+import android.view.View
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
@@ -15,11 +18,17 @@ import com.kyoapps.maniac.R
 import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
 import com.kyoapps.maniac.dagger.modules.ContextModule
 import com.kyoapps.maniac.helpers.C_SETTINGS
+import fr.castorflex.android.smoothprogressbar.SmoothProgressBar
+import io.reactivex.android.plugins.RxAndroidPlugins
+import io.reactivex.android.schedulers.AndroidSchedulers
 
 class MainActivity : AppCompatActivity() {
-    private var drawerLayout: DrawerLayout? = null
+    private var drawerLayout: androidx.drawerlayout.widget.DrawerLayout? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        RxAndroidPlugins.setInitMainThreadSchedulerHandler { AndroidSchedulers.from(Looper.getMainLooper(), true) }
+
         val component = DaggerActivityComponent.builder()
                 .contextModule(ContextModule(this))
                 .build()
@@ -37,10 +46,19 @@ class MainActivity : AppCompatActivity() {
         val host: NavHostFragment = supportFragmentManager
                 .findFragmentById(R.id.main_host_frag_threads) as NavHostFragment? ?: return
 
+
+        // Observe if something is loading
+        component.mainVM.getIsLoadingLiveData().observe(this, Observer { isLoading ->
+            findViewById<SmoothProgressBar>(R.id.spb_main)?.let { bar ->
+                if (isLoading != false) { bar.visibility = View.VISIBLE }
+                else {bar.visibility = View.INVISIBLE }
+            }
+        })
+
         // Set up SlidingPane fade color
         val typedValue = TypedValue()
         theme.resolveAttribute(R.attr.colorPrimary, typedValue, true)
-        (findViewById<SlidingPaneLayout>(R.id.pane_main))?.sliderFadeColor = typedValue.data
+        (findViewById<androidx.slidingpanelayout.widget.SlidingPaneLayout>(R.id.pane_main))?.sliderFadeColor = typedValue.data
 
 
         // Set up Action Bar
@@ -103,7 +121,7 @@ class MainActivity : AppCompatActivity() {
 
 
     override fun onBackPressed() {
-        val slidingPaneLayout: SlidingPaneLayout? = findViewById(R.id.pane_main)
+        val slidingPaneLayout: androidx.slidingpanelayout.widget.SlidingPaneLayout? = findViewById(R.id.pane_main)
         if (slidingPaneLayout != null &&!slidingPaneLayout.isOpen && slidingPaneLayout.isSlideable) slidingPaneLayout.openPane()
             else super.onBackPressed()
     }

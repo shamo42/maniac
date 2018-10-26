@@ -1,8 +1,8 @@
 package com.kyoapps.maniac.dagger.modules
 
-import android.arch.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProviders
 import android.content.Context
-import android.support.v4.app.FragmentActivity
+import androidx.fragment.app.FragmentActivity
 import com.kyoapps.maniac.api.ManiacApiLEGACY
 import com.kyoapps.maniac.dagger.scopes.CommonActivityScope
 import com.kyoapps.maniac.room.dao.ReplyDao
@@ -20,7 +20,7 @@ class MainDSModule {
     @Provides
     @CommonActivityScope
     fun mainVM(context: Context, mainVMF: MainVMF): MainVM {
-        return ViewModelProviders.of(context as FragmentActivity, mainVMF).get(MainVM::class.java)
+        return ViewModelProviders.of(context as androidx.fragment.app.FragmentActivity, mainVMF).get(MainVM::class.java)
     }
 
     @Provides

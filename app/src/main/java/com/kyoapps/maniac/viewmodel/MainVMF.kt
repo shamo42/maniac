@@ -1,7 +1,7 @@
 package com.kyoapps.maniac.viewmodel
 
-import android.arch.lifecycle.ViewModel
-import android.arch.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.kyoapps.maniac.room.dao.ThreadDao
 
 class MainVMF(private val mainDS: MainDS) : ViewModelProvider.Factory {

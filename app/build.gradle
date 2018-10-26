@@ -4,14 +4,14 @@ apply plugin: "kotlin-kapt"
 apply plugin: "androidx.navigation.safeargs"
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
     defaultConfig {
         applicationId "com.kyoapps.maniac"
-        minSdkVersion 19
-        targetSdkVersion 27
-        versionCode 3
-        versionName "3.0.0 alpha 3"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        minSdkVersion 21
+        targetSdkVersion 28
+        versionCode 4
+        versionName "3.0.0 alpha 5"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -41,27 +41,28 @@ dependencies {
     // Kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$rootProject.kotlinVersion"
 
-    implementation "com.android.support:design:$rootProject.supportLibVersion"
-    implementation "com.android.support:appcompat-v7:$rootProject.supportLibVersion"
-    implementation "com.android.support:cardview-v7:$rootProject.supportLibVersion"
-    implementation "com.android.support:recyclerview-v7:$rootProject.supportLibVersion"
-    implementation "com.android.support.constraint:constraint-layout:$rootProject.constraintLayoutVersion"
+    implementation 'com.google.android.material:material:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.0-alpha2'
 
     // Navigation
-    implementation "android.arch.navigation:navigation-fragment:$rootProject.navigationVersion"
-    implementation "android.arch.navigation:navigation-ui:$rootProject.navigationVersion"
+    def nav_version = "1.0.0-alpha06"
+    implementation "android.arch.navigation:navigation-fragment-ktx:$nav_version"
+    implementation "android.arch.navigation:navigation-ui-ktx:$nav_version"
 
     // Paging
-    implementation "android.arch.paging:runtime:$rootProject.pagingVersion"
+    implementation 'androidx.paging:paging-runtime:2.1.0-alpha01'
 
     // Architecture components
-    implementation "android.arch.lifecycle:runtime:$rootProject.architectureComponentsVersion"
-    implementation "android.arch.lifecycle:extensions:$rootProject.architectureComponentsVersion"
-    implementation "android.arch.lifecycle:reactivestreams:$rootProject.architectureComponentsVersion"
-    kapt "android.arch.lifecycle:compiler:$rootProject.architectureComponentsVersion"
-    implementation "android.arch.persistence.room:runtime:$rootProject.architectureComponentsVersion"
-    kapt "android.arch.persistence.room:compiler:$rootProject.architectureComponentsVersion"
-    implementation "android.arch.persistence.room:rxjava2:$rootProject.architectureComponentsVersion"
+    implementation 'androidx.lifecycle:lifecycle-runtime:2.0.0'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.0.0'
+    implementation 'androidx.lifecycle:lifecycle-reactivestreams:2.0.0'
+    kapt 'androidx.lifecycle:lifecycle-compiler:2.0.0'
+    implementation 'androidx.room:room-runtime:2.1.0-alpha01'
+    kapt 'androidx.room:room-compiler:2.1.0-alpha01'
+    implementation 'androidx.room:room-rxjava2:2.1.0-alpha01'
 
     // RxJava
     implementation "io.reactivex.rxjava2:rxandroid:$rootProject.rxandroidVersion"
@@ -84,6 +85,9 @@ dependencies {
     kapt "com.google.dagger:dagger-compiler:$rootProject.daggerVersion"
     implementation "com.google.dagger:dagger-android-support:$rootProject.daggerVersion"
     kapt "com.google.dagger:dagger-android-processor:$rootProject.daggerVersion"
+
+    // Ui
+    implementation "com.github.castorflex.smoothprogressbar:library:$rootProject.smoothProgressbarVersion"
 
     // Android State
     //implementation "com.evernote:android-state:$rootProject.androidState"

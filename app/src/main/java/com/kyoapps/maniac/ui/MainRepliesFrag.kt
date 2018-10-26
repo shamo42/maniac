@@ -1,12 +1,10 @@
 package com.kyoapps.maniac.ui
 
-import android.arch.lifecycle.Observer
+import android.annotation.SuppressLint
+import androidx.lifecycle.Observer
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
-import android.support.v4.app.Fragment
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,18 +15,20 @@ import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
 import com.kyoapps.maniac.dagger.modules.ContextModule
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.ui.adapters.MainRepliesPagedAdapter
-import android.support.annotation.ColorInt
-import android.support.v4.widget.SwipeRefreshLayout
+import androidx.annotation.ColorInt
 import android.util.TypedValue
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.kyoapps.maniac.functions.FuncParse
-import com.kyoapps.maniac.functions.FuncUi
-
-
-class MainRepliesFrag : Fragment() {
+class MainRepliesFrag : androidx.fragment.app.Fragment() {
 
     private lateinit var component: ActivityComponent
     private var lastRequest: LoadRequestItem? = null
-    private var scrollToLastPos = true
+    private var newThread = true
+
+    private var recyclerView: RecyclerView? = null
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -40,22 +40,21 @@ class MainRepliesFrag : Fragment() {
         return inflater.inflate(R.layout.main_replies_frag, container, false)
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         // get reply list and fetch first reply
-        val recyclerView: RecyclerView = view.findViewById(R.id.rv_replies)
-        recyclerView.layoutManager = LinearLayoutManager(activity)
-        recyclerView.setHasFixedSize(true)
+        recyclerView = view.findViewById(R.id.rv_replies)
+        recyclerView?.layoutManager = LinearLayoutManager(activity)
+        recyclerView?.setHasFixedSize(true)
+        //recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, LinearLayoutManager.VERTICAL))
 
-        @ColorInt val colorPressed = context?.resources?.getColor(R.color.grey_trans_2) ?: Color.GRAY
-
-        val adapter = MainRepliesPagedAdapter(component.mainVM, FuncUi.getAttrColorData(context, R.attr.colorPrimary), colorPressed, component.defaultSettings)
-        recyclerView.adapter = adapter
-
+        val adapter = MainRepliesPagedAdapter(context, component as DaggerActivityComponent)
+        recyclerView?.adapter = adapter
 
         component.mainVM.repliesLiveDataPaged()?.observe(this, Observer { pagedList ->
-            activity?.findViewById<SwipeRefreshLayout>(R.id.str_replies)?.isRefreshing = false
+            activity?.findViewById<SwipeRefreshLayout>(R.id.srl_replies)?.isRefreshing = false
             if (pagedList != null && pagedList.isNotEmpty()) {
                 adapter.submitList(pagedList)
 
@@ -66,25 +65,26 @@ class MainRepliesFrag : Fragment() {
                     }
                 }
 
-                if (scrollToLastPos) {
+                if (newThread) {
+
                     lastRequest?.msgid?.let { msgid ->
                         val pos = adapter.getPosFromId(msgid.toLong())
-                        if (pos > 0) (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 200)
+                        if (pos > 0) (recyclerView?.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 200)
                     }
                 }
-                //scrollToLastPos = true
             }
         })
 
         component.mainVM.getLatestRequestItem().observe(this, Observer { requestItem ->
             requestItem?.let {
+                newThread = it.thrdid != lastRequest?.thrdid
+                if (newThread) adapter.setMarkRead()
                 lastRequest = it
                 if (it.msgid != null)  adapter.setLastSelected(null, it.msgid.toLong())
             }
         })
 
-        activity?.findViewById<SwipeRefreshLayout>(R.id.str_replies)?.setOnRefreshListener {
-            scrollToLastPos = false
+        activity?.findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.srl_replies)?.setOnRefreshListener {
             if (lastRequest != null) component.mainVM.setRepliesRequestItem(lastRequest!!)
         }
 
@@ -111,11 +111,17 @@ class MainRepliesFrag : Fragment() {
                 resource?.data?.let{
                     val formattedText = FuncParse.formatHtmlLegacy(it, adapter.getSubjectFromId(lastRequest?.msgid?.toLong()), textColor, quoteColor, linkColor, " ")
                     ww.loadData(formattedText, "text/html; charset=utf-8", "UTF-8")
+                    component.mainVM.setIsLoadingMsg(false)
                 }
             })
         }
     }
 
+
+    override fun onDetach() {
+        (recyclerView?.adapter as MainRepliesPagedAdapter).setMarkRead()
+        super.onDetach()
+    }
 
     companion object {
         private const val TAG = "MainRepliesFrag"

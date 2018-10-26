@@ -1,7 +1,7 @@
 package com.kyoapps.maniac.room.dao
 
-import android.arch.paging.DataSource
-import android.arch.persistence.room.*
+import androidx.paging.DataSource
+import androidx.room.*
 import com.kyoapps.maniac.room.entities.ReplyEnt
 import com.kyoapps.maniac.room.entities.ReplyEntReadTuple
 import io.reactivex.Flowable
@@ -14,13 +14,16 @@ interface ReplyDao {
     @Update
     fun update(replyEnt: ReplyEnt): Int
 
+    @Update
+    fun updateAll(replyEntList: List<ReplyEnt>): Int
+
     @Insert
     fun insert(replyEnt: ReplyEnt): Long
 
     @Insert
     fun insertAll(replyEntList: List<ReplyEnt>)
 
-    @Query("SELECT $COLUMN_MSGID FROM $TABLE_NAME WHERE $COLUMN_THRDID = :thrdid")
+    @Query("SELECT $COLUMN_MSGID FROM $TABLE_NAME WHERE $COLUMN_THRDID = :thrdid AND $COLUMN_READ")
     fun getReadTuples(thrdid: Int): List<ReplyEntReadTuple>
 
     @Query("SELECT * FROM $TABLE_NAME WHERE $COLUMN_THRDID = :thrdid ORDER BY $COLUMN_FETCH_TIME")
@@ -54,6 +57,7 @@ interface ReplyDao {
         const val COLUMN_THRDID = "thrdid"
         const val COLUMN_MSGID = "msgid"
         const val COLUMN_FETCH_TIME = "fetchTime"
+        const val COLUMN_READ = "read"
     }
 
 

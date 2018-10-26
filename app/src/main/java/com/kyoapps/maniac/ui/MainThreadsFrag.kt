@@ -1,17 +1,17 @@
 package com.kyoapps.maniac.ui
 
-import android.arch.lifecycle.Observer
+import androidx.lifecycle.Observer
 import android.content.Context
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.support.annotation.ColorInt
-import android.support.v4.app.Fragment
-import android.support.v4.widget.SlidingPaneLayout
-import android.support.v4.widget.SwipeRefreshLayout
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import androidx.annotation.ColorInt
+import androidx.fragment.app.Fragment
+import androidx.slidingpanelayout.widget.SlidingPaneLayout
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.view.*
 import android.widget.AdapterView
@@ -23,20 +23,19 @@ import com.kyoapps.maniac.dagger.modules.ContextModule
 import com.kyoapps.maniac.functions.FuncFetch
 import com.kyoapps.maniac.helpers.C_SETTINGS
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
-import com.kyoapps.maniac.helpers.classes.ThreadDisplaySettingsItem
 import com.kyoapps.maniac.helpers.classes.subOnNewObsOnMain
 import com.kyoapps.maniac.ui.adapters.MainThreadsAdapter
 import com.squareup.moshi.Moshi
 import io.reactivex.disposables.CompositeDisposable
 import android.widget.ArrayAdapter
-import com.kyoapps.maniac.functions.FuncUi
+import android.widget.Toast
 import com.kyoapps.maniac.helpers.classes.observeOnce
 import com.kyoapps.maniac.helpers.classes.pojo.Board
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
 
 
-class MainThreadsFrag : Fragment() {
+class MainThreadsFrag : androidx.fragment.app.Fragment() {
 
     private lateinit var component: ActivityComponent
     private lateinit var compositeDisposable: CompositeDisposable
@@ -68,6 +67,7 @@ class MainThreadsFrag : Fragment() {
         Log.d(TAG, "savedInstanceState == null: ${savedInstanceState == null}")
         if (savedInstanceState == null) {
             // load deeplink if present. Else load last opened
+            Toast.makeText(context, "SIS null; lastRequest: $lastRequest", Toast.LENGTH_LONG).show()
             if (arguments?.get("mode") != null) {
                 loadDeepLink(arguments?.get("mode") as String)
             } else {
@@ -75,48 +75,50 @@ class MainThreadsFrag : Fragment() {
                     initBoardSpinner(it)
                     fetchOnline(it)
                     loadFromDb(it)
-                    Handler().postDelayed({updateBoards(it)}, 500)
+                    Handler().postDelayed({updateBoards(it)}, 2000)
                 }
             }
-        } else { initBoardSpinner(lastRequest) }
+        } else {
+            initBoardSpinner(lastRequest)
+            Toast.makeText(context, "SIS not null; lastRequest: $lastRequest", Toast.LENGTH_LONG).show()
+        }
 
 
-        val recyclerView: RecyclerView = view.findViewById(R.id.rv_threads)
-        recyclerView.layoutManager = LinearLayoutManager(activity)
+        val recyclerView: androidx.recyclerview.widget.RecyclerView = view.findViewById(R.id.rv_threads)
+        recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(activity)
         recyclerView.setHasFixedSize(true)
 
-        val slidingPaneLayout: SlidingPaneLayout? = activity?.findViewById(R.id.pane_main)
+        val slidingPaneLayout: androidx.slidingpanelayout.widget.SlidingPaneLayout? = activity?.findViewById(R.id.pane_main)
 
         @ColorInt val colorPressed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             context?.resources?.getColor(R.color.grey_trans_2, activity?.theme)?: Color.GRAY
         } else { context?.resources?.getColor(R.color.grey_trans_2)?: Color.GRAY }
 
-        val adapter: MainThreadsAdapter? = MainThreadsAdapter(slidingPaneLayout, component.mainVM, component.mainDS,
-                FuncUi.getAttrColorData(context, R.attr.colorPrimary), colorPressed,
-                ThreadDisplaySettingsItem(2, false, R.layout.main_thread_row))
+        val adapter: MainThreadsAdapter? = MainThreadsAdapter(context, slidingPaneLayout, component as DaggerActivityComponent)
 
         recyclerView.adapter = adapter
 
         component.mainVM.threadsLiveDataRx()?.observe(this, Observer { commonResource ->
-                activity?.findViewById<SwipeRefreshLayout>(R.id.str_threads)?.isRefreshing = false
-                commonResource?.data?.let { list ->
-                    //Log.d(TAG, "lastRequest brdid: ${lastRequest?.brdid} actual brdid ${it.first().brdid}")
-                    if (list.isNotEmpty() && requestThreadsLayoutRefresh) {
-                        requestThreadsLayoutRefresh = false
-                        adapter?.submitList(list)
-                        if (scrollToLastPos) {
-                            lastRequest?.thrdid?.let { thrdid ->
-                                val pos = adapter?.getPosFromId(thrdid.toLong()) ?: 0
-                                if (pos > 0) (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 500)
-                            }
-                        }
-                        // delay load for smoother animation
-                        if (requestOpenPane) {
-                            requestOpenPane = false
-                            Handler().postDelayed({ slidingPaneLayout?.openPane()}, 600)
+            activity?.findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.srl_threads)?.isRefreshing = false
+
+            commonResource?.data?.let { list ->
+                //Log.d(TAG, "lastRequest brdid: ${lastRequest?.brdid} actual brdid ${it.first().brdid}")
+                if (list.isNotEmpty() && requestThreadsLayoutRefresh) {
+                    requestThreadsLayoutRefresh = false
+                    adapter?.submitList(list)
+                    if (scrollToLastPos) {
+                        lastRequest?.thrdid?.let { thrdid ->
+                            val pos = adapter?.getPosFromId(thrdid.toLong()) ?: 0
+                            if (pos > 0) (recyclerView.layoutManager as androidx.recyclerview.widget.LinearLayoutManager).scrollToPositionWithOffset(pos, 500)
                         }
                     }
+                    // delay load for smoother animation
+                    if (requestOpenPane) {
+                        requestOpenPane = false
+                        Handler().postDelayed({ slidingPaneLayout?.openPane()}, 600)
+                    }
                 }
+            }
         })
 
         component.mainVM.getLatestRequestItem().observe(this, Observer { requestItem ->
@@ -128,9 +130,9 @@ class MainThreadsFrag : Fragment() {
         })
 
         //swipe to refresh
-        activity?.findViewById<SwipeRefreshLayout>(R.id.str_threads)?.setOnRefreshListener{
+        activity?.findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.srl_threads)?.setOnRefreshListener{
             scrollToLastPos = false
-            if (lastRequest != null) FuncFetch.fetchThreads(component.mainDS, lastRequest!!, false)
+            if (lastRequest != null) FuncFetch.fetchThreads(component.mainVM, component.mainDS, lastRequest!!, false)
         }
 
     }
@@ -173,8 +175,8 @@ class MainThreadsFrag : Fragment() {
     private fun fetchOnline(requestItem: LoadRequestItem) {
         Log.i(TAG, "fetchOnline brd ${requestItem.brdid} thrd ${requestItem.thrdid} msg ${requestItem.msgid}")
         if (requestItem.msgid != null) component.mainVM.setMessageRequestItem(requestItem)
-        FuncFetch.fetchThreads(component.mainDS, requestItem, true)
-        FuncFetch.fetchReplies(component.mainDS, requestItem)
+        FuncFetch.fetchThreads(component.mainVM, component.mainDS, requestItem, true)
+        FuncFetch.fetchReplies(component.mainVM, component.mainDS, requestItem)
     }
 
     private fun initBoardSpinner(requestItem: LoadRequestItem?) {
@@ -216,7 +218,7 @@ class MainThreadsFrag : Fragment() {
                     requestOpenPane = true
                     val loadThreadsRequest = LoadRequestItem(boardList[position].brdid, null, null)
 
-                    FuncFetch.fetchThreads(component.mainDS, loadThreadsRequest, true)
+                    FuncFetch.fetchThreads(component.mainVM, component.mainDS, loadThreadsRequest, true)
                     component.mainVM.setThreadsRequestItem(loadThreadsRequest)
                 }
             }

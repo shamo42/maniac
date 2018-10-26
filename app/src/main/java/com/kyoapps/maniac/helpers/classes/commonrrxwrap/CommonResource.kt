@@ -1,4 +1,4 @@
-package com.kyoapps.maniac.helpers.classes.CommonRxDataWrap
+package com.kyoapps.maniac.helpers.classes.commonrrxwrap
 
 
 data class CommonResource<out T>(val status: Status, val data: T?, val message: String?) {

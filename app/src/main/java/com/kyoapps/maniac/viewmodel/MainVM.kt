@@ -1,128 +1,153 @@
 package com.kyoapps.maniac.viewmodel
 
-import android.arch.lifecycle.*
+import androidx.lifecycle.*
 import android.util.Log
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.room.entities.ReplyEnt
 import com.kyoapps.maniac.room.entities.ThreadEnt
-import android.arch.paging.PagedList
-import android.arch.lifecycle.LiveData
-import android.arch.paging.LivePagedListBuilder
-import com.kyoapps.maniac.helpers.classes.CommonRxDataWrap.CommonResource
-import com.kyoapps.maniac.helpers.classes.CommonRxDataWrap.Status
+import androidx.paging.PagedList
+import androidx.paging.LivePagedListBuilder
+import com.kyoapps.maniac.helpers.classes.commonrrxwrap.CommonResource
+import com.kyoapps.maniac.helpers.classes.commonrrxwrap.Status
 import com.kyoapps.maniac.helpers.classes.pojo.Board
+import com.kyoapps.maniac.ui.MainRepliesFrag
 import io.reactivex.schedulers.Schedulers
 
 
 class MainVM(private val dataSource: MainDS) : ViewModel() {
 
     //private val disposables = CompositeDisposable()
-    //Threads
-    private val loadThreadsMLD = MutableLiveData<LoadRequestItem>()
-    private var threadsLiveData: LiveData<CommonResource<List<ThreadEnt>>>? = null
-    //Replies
-    private val loadRepliesMLD = MutableLiveData<LoadRequestItem>()
-    private var repliesPagedLiveData: LiveData<PagedList<ReplyEnt>>? = null
-    //Message
-    private val messageLoadMLD = MutableLiveData<LoadRequestItem>()
-    private var messageLiveData: LiveData<CommonResource<String>>? = null
-    //Boards
-    private var boardsLiveData: LiveData<CommonResource<List<Board>>>? = null
+    // Threads database
+    private val threadsDatabaseMLD = MutableLiveData<LoadRequestItem>()
+    private var threadsDatabaseLiveData: LiveData<CommonResource<List<ThreadEnt>>>? = null
+    // Replies database
+    private val repliesDatabaseMLD = MutableLiveData<LoadRequestItem>()
+    private var repliesDatabasePagedLiveData: LiveData<PagedList<ReplyEnt>>? = null
+    // Message fetch online
+    private val messageFetchMLD = MutableLiveData<LoadRequestItem>()
+    private var messageFetchLiveData: LiveData<CommonResource<String>>? = null
+    // Boards fetch online
+    private var boardsFetchLiveData: LiveData<CommonResource<List<Board>>>? = null
 
-    //1. Threads
+    // Data sharing
+    private val loadingMsgMLD = MutableLiveData<Boolean>()
+    private val loadingThreadsMLD = MutableLiveData<Boolean>()
+    private val loadingRepliesMLD = MutableLiveData<Boolean>()
+
+
+    // 1. Threads
     fun setThreadsRequestItem(loadRequestItem: LoadRequestItem) {
         Log.d(TAG, "loadRequestItem: ${loadRequestItem.toString()}")
-        this.loadThreadsMLD.value = loadRequestItem
+        this.threadsDatabaseMLD.value = loadRequestItem
     }
 
     /*private fun requestLiveData(brdid: Short): LiveData<List<ThreadEnt>>? {
-        Log.d(TAG, "threadsLiveData null ${threadsLiveData == null}")
-        if (threadsLiveData == null) {
-            threadsLiveData = MutableLiveData()
+        Log.d(TAG, "threadsDatabaseLiveData null ${threadsDatabaseLiveData == null}")
+        if (threadsDatabaseLiveData == null) {
+            threadsDatabaseLiveData = MutableLiveData()
         }
         threadsRxDb(brdid)
-        return threadsLiveData
+        return threadsDatabaseLiveData
     }*/
 
     fun threadsLiveDataRx(): LiveData<CommonResource<List<ThreadEnt>>>? {
-        Log.d(TAG, "threadsLiveData null ${threadsLiveData == null}")
-        if (threadsLiveData == null) {
-            threadsLiveData = Transformations.switchMap(loadThreadsMLD) {loadRequestItem ->
+        Log.d(TAG, "threadsDatabaseLiveData null ${threadsDatabaseLiveData == null}")
+        if (threadsDatabaseLiveData == null) {
+            threadsDatabaseLiveData = Transformations.switchMap(threadsDatabaseMLD) { loadRequestItem ->
                 LiveDataReactiveStreams.fromPublisher(dataSource.getThreadsFromDb(loadRequestItem.brdid)
                         .map { CommonResource(Status.SUCCESS, it, null) }
                         .onErrorReturn { CommonResource(Status.ERROR, null, it.message) }
-                        .subscribeOn(Schedulers.newThread()))
+                        .subscribeOn(Schedulers.io()))
             }
         }
-        return threadsLiveData
+        return threadsDatabaseLiveData
     }
 
 
 
-    //2. Replies
+    // 2. Replies
     fun setRepliesRequestItem(loadRequestItem: LoadRequestItem) {
         Log.d(TAG, "loadRequestItem ${loadRequestItem.thrdid == null} ${loadRequestItem.thrdid}")
-        this.loadRepliesMLD.value = loadRequestItem
+        this.repliesDatabaseMLD.value = loadRequestItem
     }
 
     fun repliesLiveDataPaged(): LiveData<PagedList<ReplyEnt>>? {
-        Log.d(TAG, "repliesPagedLiveData null ${repliesPagedLiveData == null}")
-        Log.d(TAG, "thrdid null ${loadRepliesMLD.value?.thrdid == null}")
-        if (repliesPagedLiveData == null) { //&& loadRepliesMLD.value?.thrdid != null) {
+        Log.d(TAG, "repliesDatabasePagedLiveData null ${repliesDatabasePagedLiveData == null}")
+        Log.d(TAG, "thrdid null ${repliesDatabaseMLD.value?.thrdid == null}")
+        if (repliesDatabasePagedLiveData == null) { //&& repliesDatabaseMLD.value?.thrdid != null) {
             val pagedListConfig = PagedList.Config.Builder()
                     .setEnablePlaceholders(false)
                     .setInitialLoadSizeHint(50)
                     .setPageSize(25)
                     .setPrefetchDistance(10)
                     .build()
-            repliesPagedLiveData = Transformations.switchMap(loadRepliesMLD) {
+            repliesDatabasePagedLiveData = Transformations.switchMap(repliesDatabaseMLD) {
                 //setMessageRequestItem(it)
                 LivePagedListBuilder(dataSource.getRepliesPagedFromDb(it.thrdid!!), pagedListConfig)
                         .build()
             }
         }
-        return repliesPagedLiveData
+        return repliesDatabasePagedLiveData
     }
 
-    //3. Message
+    // 3. Message
     fun setMessageRequestItem(messageLoadItem: LoadRequestItem) {
-        if (messageLoadItem.msgid != null && messageLoadItem.msgid != messageLoadMLD.value?.msgid) this.messageLoadMLD.value = messageLoadItem
+
+        if (messageLoadItem.msgid != null && messageLoadItem.msgid != messageFetchMLD.value?.msgid) {
+            this.setIsLoadingMsg(true)
+            this.messageFetchMLD.value = messageLoadItem
+        }
     }
 
     fun getMessageLiveDataRx(): LiveData<CommonResource<String>>? {
-        Log.d(TAG, "messageLiveData null ${messageLiveData == null}")
-        if (messageLiveData == null) {
-            messageLiveData = Transformations.switchMap(messageLoadMLD) {
-                LiveDataReactiveStreams.fromPublisher(dataSource.getMessage(it.brdid, it.msgid!!)
+        Log.d(TAG, "messageFetchLiveData null ${messageFetchLiveData == null}")
+        if (messageFetchLiveData == null) {
+            messageFetchLiveData = Transformations.switchMap(messageFetchMLD) { loadItem ->
+                LiveDataReactiveStreams.fromPublisher(dataSource.getMessage(loadItem.brdid, loadItem.msgid!!)
                         .map { CommonResource(Status.SUCCESS, it, null) }
                         .onErrorReturn { CommonResource(Status.ERROR, null, it.message) }
                         .toFlowable()
-                        .subscribeOn(Schedulers.newThread()))
+                        .subscribeOn(Schedulers.io()))
             }
         }
-        return messageLiveData
+        return messageFetchLiveData
     }
 
 
-    //4. Boards
+    // 4. Boards
     fun getBoardsLiveDataRx(): LiveData<CommonResource<List<Board>>>? {
-        Log.d(TAG, "boardsLiveData null ${boardsLiveData == null}")
-        if (boardsLiveData == null) {
-            boardsLiveData =
+        Log.d(TAG, "boardsFetchLiveData null ${boardsFetchLiveData == null}")
+        if (boardsFetchLiveData == null) {
+            boardsFetchLiveData =
                 LiveDataReactiveStreams.fromPublisher(dataSource.getBoards()
                         .map { CommonResource(Status.SUCCESS, it, null) }
                         .onErrorReturn { CommonResource(Status.ERROR, null, it.message) }
                         .toFlowable()
-                        .subscribeOn(Schedulers.newThread()))
+                        .subscribeOn(Schedulers.io()))
         }
-        return boardsLiveData
+        return boardsFetchLiveData
     }
 
     fun getLatestRequestItem(): LiveData<LoadRequestItem> {
-        return messageLoadMLD
+        return messageFetchMLD
     }
 
-    //override fun onCleared() { disposables.clear() }
+
+
+    // 5. Data sharing
+    fun setIsLoadingThreads(loading: Boolean) { this.loadingThreadsMLD.value = loading }
+    fun setIsLoadingReplies(loading: Boolean) { this.loadingRepliesMLD.value = loading }
+    fun setIsLoadingMsg(loading: Boolean) { this.loadingMsgMLD.value = loading }
+
+    fun getIsLoadingLiveData(): LiveData<Boolean> {
+        val result = MediatorLiveData<Boolean>()
+
+        result.addSource(loadingThreadsMLD) { _ -> result.value = loadingThreadsMLD.value?:true || loadingMsgMLD.value?:true }
+        result.addSource(loadingRepliesMLD) { _ -> result.value = loadingThreadsMLD.value?:true || loadingMsgMLD.value?:true }
+        result.addSource(loadingMsgMLD) { _ -> result.value = loadingThreadsMLD.value?:true || loadingMsgMLD.value?:true }
+        return result
+    }
+
 
     companion object {
         private const val TAG = "MainVM"

@@ -148,8 +148,8 @@ object FuncParse {
         val messageBuilder = StringBuilder()
 
         var line: String
-        response.body()?.byteStream()?.bufferedReader(Charsets.UTF_8)?.forEachLine {
-            line = it
+        response.body()?.byteStream()?.bufferedReader(Charsets.UTF_8)?.forEachLine { string ->
+            line = string
 
             if (line.trim { it <= ' ' } == "<tr class=\"bg2\">") {
                 readLine = true
@@ -189,10 +189,10 @@ object FuncParse {
                         if (image > 0) {
                             val lineEnd = line.indexOf("</a>]", image) + 5
                             //Log.d(line, "IMAGE BEFORE");
-                            if (line.indexOf("</font>") > 0) {
-                                line = line.replace("[<a href", "<div class=\"img-wraper\"><img src").substring(0, image + 30) + "/></div></font>" + line.substring(lineEnd)
+                            line = if (line.indexOf("</font>") > 0) {
+                                line.replace("[<a href", "<div class=\"img-wraper\"><img src").substring(0, image + 30) + "/></div></font>" + line.substring(lineEnd)
                             } else
-                                line = line.replace("[<a href", "<div class=\"img-wraper\"><img src").substring(0, image + 30) + "/></div>" + line.substring(lineEnd)
+                                line.replace("[<a href", "<div class=\"img-wraper\"><img src").substring(0, image + 30) + "/></div>" + line.substring(lineEnd)
                             if (line.contains("www.dropbox.com"))
                                 line = line.replace("www.dropbox.com", "dl.dropboxusercontent.com")
                             //Log.d("IMAGE AFTER", line);

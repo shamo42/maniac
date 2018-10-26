@@ -2,9 +2,10 @@ package com.kyoapps.maniac.functions
 
 import android.util.Log
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
+import com.kyoapps.maniac.helpers.classes.subOnNewObsOnMain
 import com.kyoapps.maniac.viewmodel.MainDS
+import com.kyoapps.maniac.viewmodel.MainVM
 import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
 object FuncFetch {
@@ -12,20 +13,28 @@ object FuncFetch {
     private val compositeDisposable: CompositeDisposable = CompositeDisposable()
 
     // optional delay loading for faster start and smoother animations
-    fun fetchThreads(mainDS: MainDS, loadRequestItem: LoadRequestItem, delayLoading: Boolean) {
+    fun fetchThreads(mainVM: MainVM, mainDS: MainDS, loadRequestItem: LoadRequestItem, delayLoading: Boolean) {
+        mainVM.setIsLoadingThreads(true)
         compositeDisposable.add(mainDS.fetchThreadsIntoDb(loadRequestItem.brdid)
                 .delay(if (delayLoading) 2 else 0, TimeUnit.SECONDS)
-                .subscribeOn(Schedulers.newThread())
-                .subscribe({result ->  Log.i(TAG, "fetchThreads success $result") },
+                .subOnNewObsOnMain()
+                .subscribe({result ->
+                    Log.i(TAG, "fetchThreads success $result")
+                    mainVM.setIsLoadingThreads(false)
+                },
                         {error -> error.printStackTrace()})
         )
     }
 
-    fun fetchReplies(mainDS: MainDS, loadRequestItem: LoadRequestItem) {
+    fun fetchReplies(mainVM: MainVM, mainDS: MainDS, loadRequestItem: LoadRequestItem) {
+        mainVM.setIsLoadingReplies(true)
         if (loadRequestItem.thrdid != null && loadRequestItem.thrdid != -1) {
             compositeDisposable.add(mainDS.fetchRepliesIntoDb(loadRequestItem.brdid, loadRequestItem.thrdid)
-                    .subscribeOn(Schedulers.newThread())
-                    .subscribe({result ->  Log.i(TAG, "fetchReplies success $result") },
+                    .subOnNewObsOnMain()
+                    .subscribe({result ->
+                        Log.i(TAG, "fetchReplies success $result")
+                        mainVM.setIsLoadingReplies(false)
+                    },
                             {error -> error.printStackTrace()})
             )
         }
