@@ -88,13 +88,10 @@ class MainDS(private val maniacApiLEGACY: ManiacApiLEGACY, private val threadDao
                 .map { it.read = true;it}
                 .map { replyDao.update(it) }
     }
-<<<<<<< HEAD
     fun markRepliesReadDb(replyEntList: List<ReplyEnt>): Single<Int> {
         return Single.just(replyEntList)
                 .map { replyDao.updateAll(it) }
     }
-=======
->>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
 
     /*fun getRepliesFromDb(thrdid: Int): Flowable<List<ReplyEnt>> {
         return  replyDao.getRepliesOrderedRx(thrdid)

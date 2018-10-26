@@ -99,11 +99,7 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
         recyclerView.adapter = adapter
 
         component.mainVM.threadsLiveDataRx()?.observe(this, Observer { commonResource ->
-<<<<<<< HEAD
             activity?.findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.srl_threads)?.isRefreshing = false
-=======
-            activity?.findViewById<SwipeRefreshLayout>(R.id.srl_threads)?.isRefreshing = false
->>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
 
             commonResource?.data?.let { list ->
                 //Log.d(TAG, "lastRequest brdid: ${lastRequest?.brdid} actual brdid ${it.first().brdid}")
@@ -113,11 +109,7 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
                     if (scrollToLastPos) {
                         lastRequest?.thrdid?.let { thrdid ->
                             val pos = adapter?.getPosFromId(thrdid.toLong()) ?: 0
-<<<<<<< HEAD
                             if (pos > 0) (recyclerView.layoutManager as androidx.recyclerview.widget.LinearLayoutManager).scrollToPositionWithOffset(pos, 500)
-=======
-                            if (pos > 0) (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 500)
->>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
                         }
                     }
                     // delay load for smoother animation
@@ -138,11 +130,7 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
         })
 
         //swipe to refresh
-<<<<<<< HEAD
         activity?.findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.srl_threads)?.setOnRefreshListener{
-=======
-        activity?.findViewById<SwipeRefreshLayout>(R.id.srl_threads)?.setOnRefreshListener{
->>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
             scrollToLastPos = false
             if (lastRequest != null) FuncFetch.fetchThreads(component.mainVM, component.mainDS, lastRequest!!, false)
         }
