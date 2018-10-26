@@ -3,12 +3,22 @@ package com.kyoapps.maniac.ui.adapters
 import android.widget.TextView
 import android.view.LayoutInflater
 import android.view.ViewGroup
+<<<<<<< HEAD
 import androidx.paging.PagedListAdapter
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import androidx.annotation.ColorInt
 import androidx.recyclerview.widget.DiffUtil
+=======
+import android.arch.paging.PagedListAdapter
+import android.content.Context
+import android.content.SharedPreferences
+import android.graphics.Color
+import android.os.Bundle
+import android.support.annotation.ColorInt
+import android.support.v7.util.DiffUtil
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
 import android.util.Log
 import android.view.View
 import com.kyoapps.maniac.R
@@ -16,8 +26,11 @@ import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
 import com.kyoapps.maniac.functions.FuncUi
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.room.entities.ReplyEnt
+<<<<<<< HEAD
 import com.kyoapps.maniac.ui.MainRepliesFrag
 import io.reactivex.Single
+=======
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
 import io.reactivex.schedulers.Schedulers
 
 
@@ -36,6 +49,14 @@ class MainRepliesPagedAdapter(context: Context?, private val component: DaggerAc
     private val toBeMarkedReadList: ArrayList<ReplyEnt> = ArrayList()
 
 
+    @ColorInt private val colorSelected = FuncUi.getAttrColorData(context, R.attr.colorPrimary)
+    @ColorInt private val colorNotSelectedUnread = context?.resources?.getColor(R.color.grey_trans_2) ?: Color.GRAY
+    @ColorInt private val textColorNotSelectedUnread = FuncUi.getAttrColorData(context, R.attr.textColorStrong)
+    @ColorInt private val textColorNotSelectedRead = FuncUi.getAttrColorData(context, R.attr.textColorDim)
+    private val textBackgroundUnread = FuncUi.makeColorStateList(Color.WHITE, Color.WHITE, textColorNotSelectedUnread)
+    private val textBackgroundRead = FuncUi.makeColorStateList(Color.WHITE, Color.WHITE, textColorNotSelectedRead)
+
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReplyViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
         val view = layoutInflater.inflate(R.layout.main_reply_row, parent, false)
@@ -51,12 +72,17 @@ class MainRepliesPagedAdapter(context: Context?, private val component: DaggerAc
             holder.bindTo(replyEnt)
             holder.title.setTextColor(if (replyEnt.read) textBackgroundRead else textBackgroundUnread)
             holder.user.setTextColor(if (replyEnt.read) textBackgroundRead else textBackgroundUnread)
+<<<<<<< HEAD
             holder.view.isSelected = lastSelectedMsgId == getItemId(position)
+=======
+            holder.view.isSelected = lastSelectedId == getItemId(position)
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
         }
 
         holder.view.setOnClickListener { _->
             getItem(holder.adapterPosition)?.let {
                 Log.i(TAG, "MainRepliesPagedAdapter read thrdid ${it.thrdid} msgid ${it.msgid}")
+<<<<<<< HEAD
                 if (it.msgid.toLong() != lastSelectedMsgId) {
 
                     /*component.mainDS.markReplyReadDb(it) //causes weird jumps in list probably causes by paging and list update
@@ -69,6 +95,14 @@ class MainRepliesPagedAdapter(context: Context?, private val component: DaggerAc
                     setLastSelected(holder, it.msgid.toLong())
                     component.mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
 
+=======
+                if (it.msgid.toLong() != lastSelectedId) {
+                    setLastSelected(holder, it.msgid.toLong())
+                    component.mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
+                    component.mainDS.markReplyReadDb(it)
+                            .subscribeOn(Schedulers.newThread())
+                            .subscribe({i -> Log.d(TAG, "markReplyReadDb $i")}, { t-> t.printStackTrace()})
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
                 }
             }
         }
@@ -112,10 +146,17 @@ class MainRepliesPagedAdapter(context: Context?, private val component: DaggerAc
         if (lastSelectedMsgId != id) {
             holder?.view?.isSelected = true
             // remove highlight from last selected row
+<<<<<<< HEAD
             if (lastSelectedMsgId != -1L) notifyItemChanged(getPosFromId(lastSelectedMsgId))
             lastSelectedMsgId = id
             // refresh row to show it selected if (holder == null)
             if (holder == null) notifyItemChanged(getPosFromId(lastSelectedMsgId))
+=======
+            if (lastSelectedId != -1L) notifyItemChanged(getPosFromId(lastSelectedId))
+            lastSelectedId = id
+            // refresh row to show it selected if (holder == null)
+            if (holder == null) notifyItemChanged(getPosFromId(lastSelectedId))
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
         }
     }
 
@@ -146,10 +187,17 @@ class MainRepliesPagedAdapter(context: Context?, private val component: DaggerAc
 
             override fun getChangePayload(oldItem: ReplyEnt, newItem: ReplyEnt): Any? {
                 val diffBundle = Bundle()
+<<<<<<< HEAD
                 if (newItem.subject != oldItem.subject)  diffBundle.putString("KEY_SUBJECT", newItem.subject)
                 if (newItem.user != oldItem.user) diffBundle.putString("KEY_USER", newItem.user)
                 if (newItem.replyTime != oldItem.replyTime) diffBundle.putString("KEY_TIMESTAMP", newItem.replyTime)
                 if (newItem.read != oldItem.read) diffBundle.putBoolean("KEY_READ", newItem.read)
+=======
+                if (newItem?.subject != oldItem?.subject)  diffBundle.putString("KEY_SUBJECT", newItem?.subject)
+                if (newItem?.user != oldItem?.user) diffBundle.putString("KEY_USER", newItem?.user)
+                if (newItem?.replyTime != oldItem?.replyTime) diffBundle.putString("KEY_TIMESTAMP", newItem?.replyTime)
+                if (newItem?.read != oldItem?.read) diffBundle.putBoolean("KEY_READ", newItem?.read?: false)
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
                 if (diffBundle.size() == 0) return null
                 return diffBundle
             }

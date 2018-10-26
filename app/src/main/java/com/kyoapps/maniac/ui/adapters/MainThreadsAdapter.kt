@@ -4,11 +4,19 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
+<<<<<<< HEAD
 import androidx.annotation.ColorInt
 import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+=======
+import android.support.annotation.ColorInt
+import android.support.v4.widget.SlidingPaneLayout
+import android.support.v7.recyclerview.extensions.ListAdapter
+import android.support.v7.util.DiffUtil
+import android.support.v7.widget.RecyclerView
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -26,8 +34,13 @@ import com.kyoapps.maniac.room.entities.ThreadEnt
 import com.kyoapps.maniac.viewmodel.MainDS
 import com.kyoapps.maniac.viewmodel.MainVM
 
+<<<<<<< HEAD
 class MainThreadsAdapter(val context: Context?, private val slidingPaneLayout: androidx.slidingpanelayout.widget.SlidingPaneLayout?, private val component: DaggerActivityComponent)
     : ListAdapter<ThreadEnt, androidx.recyclerview.widget.RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+=======
+class MainThreadsAdapter(context: Context?, private val slidingPaneLayout: SlidingPaneLayout?, private val component: DaggerActivityComponent)
+    : ListAdapter<ThreadEnt, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
 
     private var lastSelectedId = -1L
 
@@ -63,7 +76,10 @@ class MainThreadsAdapter(val context: Context?, private val slidingPaneLayout: a
                     setLastSelected(holder, it.thrdid.toLong())
                     FuncFetch.fetchReplies(component.mainVM, component.mainDS, LoadRequestItem(it.brdid, it.thrdid, null))
                     component.mainVM.setRepliesRequestItem(LoadRequestItem(it.brdid, it.thrdid, null))
+<<<<<<< HEAD
                     //Toast.makeText(context, "click; request: ${LoadRequestItem(it.brdid, it.thrdid, null)}", Toast.LENGTH_SHORT).show()
+=======
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
                 }
                 Handler().postDelayed({slidingPaneLayout?.closePane()}, 480)
             }

@@ -12,6 +12,9 @@ import com.kyoapps.maniac.helpers.classes.commonrrxwrap.Status
 import com.kyoapps.maniac.helpers.classes.pojo.Board
 import com.kyoapps.maniac.ui.MainRepliesFrag
 import io.reactivex.schedulers.Schedulers
+import android.arch.lifecycle.MutableLiveData
+
+
 
 
 class MainVM(private val dataSource: MainDS) : ViewModel() {
@@ -34,7 +37,10 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
     private val loadingThreadsMLD = MutableLiveData<Boolean>()
     private val loadingRepliesMLD = MutableLiveData<Boolean>()
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
     // 1. Threads
     fun setThreadsRequestItem(loadRequestItem: LoadRequestItem) {
         Log.d(TAG, "loadRequestItem: ${loadRequestItem.toString()}")
@@ -92,7 +98,10 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
 
     // 3. Message
     fun setMessageRequestItem(messageLoadItem: LoadRequestItem) {
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
         if (messageLoadItem.msgid != null && messageLoadItem.msgid != messageFetchMLD.value?.msgid) {
             this.setIsLoadingMsg(true)
             this.messageFetchMLD.value = messageLoadItem
@@ -130,6 +139,7 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
 
     fun getLatestRequestItem(): LiveData<LoadRequestItem> {
         return messageFetchMLD
+<<<<<<< HEAD
     }
 
 
@@ -148,6 +158,26 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
         return result
     }
 
+=======
+    }
+
+
+
+    // 5. Data sharing
+    fun setIsLoadingThreads(loading: Boolean) { this.loadingThreadsMLD.value = loading }
+    fun setIsLoadingReplies(loading: Boolean) { this.loadingRepliesMLD.value = loading }
+    fun setIsLoadingMsg(loading: Boolean) { this.loadingMsgMLD.value = loading }
+
+
+    fun getIsLoadingLiveData(): LiveData<Boolean> {
+        val result = MediatorLiveData<Boolean>()
+
+        result.addSource(loadingThreadsMLD) { _ -> result.value = loadingThreadsMLD.value?:true || loadingMsgMLD.value?:true }
+        result.addSource(loadingRepliesMLD) { _ -> result.value = loadingThreadsMLD.value?:true || loadingMsgMLD.value?:true }
+        result.addSource(loadingMsgMLD) { _ -> result.value = loadingThreadsMLD.value?:true || loadingMsgMLD.value?:true }
+        return result
+    }
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
 
     companion object {
         private const val TAG = "MainVM"

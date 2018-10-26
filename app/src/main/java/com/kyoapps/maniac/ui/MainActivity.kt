@@ -1,5 +1,6 @@
 package com.kyoapps.maniac.ui
 
+<<<<<<< HEAD
 import androidx.lifecycle.Observer
 import android.content.res.Resources
 import android.os.Bundle
@@ -8,6 +9,16 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+=======
+import android.arch.lifecycle.Observer
+import android.content.res.Resources
+import android.os.Bundle
+import android.os.Looper
+import android.support.v4.widget.DrawerLayout
+import android.support.v4.widget.SlidingPaneLayout
+import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.Toolbar
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
 import android.util.Log
 import android.util.TypedValue
 import android.view.View

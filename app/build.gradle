@@ -8,10 +8,17 @@ android {
     defaultConfig {
         applicationId "com.kyoapps.maniac"
         minSdkVersion 21
+<<<<<<< HEAD
         targetSdkVersion 28
         versionCode 4
         versionName "3.0.0 alpha 5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+=======
+        targetSdkVersion 27
+        versionCode 4
+        versionName "3.0.0 alpha 4"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
     }
 
     buildTypes {

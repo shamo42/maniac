@@ -11,4 +11,8 @@
         android:layout_height="match_parent"
         android:scrollbars="vertical"
         android:background="?attr/listItemColor" />
+<<<<<<< HEAD
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+=======
+</android.support.v4.widget.SwipeRefreshLayout>
+>>>>>>> 8a1e94693e63922ed0fd786654e66d081f7a6a63
