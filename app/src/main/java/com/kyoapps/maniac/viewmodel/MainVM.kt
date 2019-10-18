@@ -7,10 +7,9 @@ import com.kyoapps.maniac.room.entities.ReplyEnt
 import com.kyoapps.maniac.room.entities.ThreadEnt
 import androidx.paging.PagedList
 import androidx.paging.LivePagedListBuilder
-import com.kyoapps.maniac.helpers.classes.commonrrxwrap.CommonResource
+import com.kyoapps.maniac.helpers.classes.commonrrxwrap.ResultObject
 import com.kyoapps.maniac.helpers.classes.commonrrxwrap.Status
 import com.kyoapps.maniac.helpers.classes.pojo.Board
-import com.kyoapps.maniac.ui.MainRepliesFrag
 import io.reactivex.schedulers.Schedulers
 
 
@@ -19,15 +18,15 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
     //private val disposables = CompositeDisposable()
     // Threads database
     private val threadsDatabaseMLD = MutableLiveData<LoadRequestItem>()
-    private var threadsDatabaseLiveData: LiveData<CommonResource<List<ThreadEnt>>>? = null
+    private var threadsDatabaseLiveData: LiveData<ResultObject<List<ThreadEnt>>>? = null
     // Replies database
     private val repliesDatabaseMLD = MutableLiveData<LoadRequestItem>()
     private var repliesDatabasePagedLiveData: LiveData<PagedList<ReplyEnt>>? = null
     // Message fetch online
     private val messageFetchMLD = MutableLiveData<LoadRequestItem>()
-    private var messageFetchLiveData: LiveData<CommonResource<String>>? = null
+    private var messageFetchLiveData: LiveData<ResultObject<String>>? = null
     // Boards fetch online
-    private var boardsFetchLiveData: LiveData<CommonResource<List<Board>>>? = null
+    private var boardsFetchLiveData: LiveData<ResultObject<List<Board>>>? = null
 
     // Data sharing
     private val loadingMsgMLD = MutableLiveData<Boolean>()
@@ -50,13 +49,13 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
         return threadsDatabaseLiveData
     }*/
 
-    fun threadsLiveDataRx(): LiveData<CommonResource<List<ThreadEnt>>>? {
+    fun threadsLiveDataRx(): LiveData<ResultObject<List<ThreadEnt>>>? {
         Log.d(TAG, "threadsDatabaseLiveData null ${threadsDatabaseLiveData == null}")
         if (threadsDatabaseLiveData == null) {
             threadsDatabaseLiveData = Transformations.switchMap(threadsDatabaseMLD) { loadRequestItem ->
                 LiveDataReactiveStreams.fromPublisher(dataSource.getThreadsFromDb(loadRequestItem.brdid)
-                        .map { CommonResource(Status.SUCCESS, it, null) }
-                        .onErrorReturn { CommonResource(Status.ERROR, null, it.message) }
+                        .map { ResultObject.Success(it) as ResultObject<List<ThreadEnt>> }
+                        .onErrorReturn { ResultObject.Error(it) }
                         .subscribeOn(Schedulers.io()))
             }
         }
@@ -99,13 +98,13 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
         }
     }
 
-    fun getMessageLiveDataRx(): LiveData<CommonResource<String>>? {
+    fun getMessageLiveDataRx(): LiveData<ResultObject<String>>? {
         Log.d(TAG, "messageFetchLiveData null ${messageFetchLiveData == null}")
         if (messageFetchLiveData == null) {
             messageFetchLiveData = Transformations.switchMap(messageFetchMLD) { loadItem ->
                 LiveDataReactiveStreams.fromPublisher(dataSource.getMessage(loadItem.brdid, loadItem.msgid!!)
-                        .map { CommonResource(Status.SUCCESS, it, null) }
-                        .onErrorReturn { CommonResource(Status.ERROR, null, it.message) }
+                        .map { ResultObject.Success(it) as ResultObject<String> }
+                        .onErrorReturn { ResultObject.Error(it) }
                         .toFlowable()
                         .subscribeOn(Schedulers.io()))
             }
@@ -115,13 +114,13 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
 
 
     // 4. Boards
-    fun getBoardsLiveDataRx(): LiveData<CommonResource<List<Board>>>? {
+    fun getBoardsLiveDataRx(): LiveData<ResultObject<List<Board>>>? {
         Log.d(TAG, "boardsFetchLiveData null ${boardsFetchLiveData == null}")
         if (boardsFetchLiveData == null) {
             boardsFetchLiveData =
                 LiveDataReactiveStreams.fromPublisher(dataSource.getBoards()
-                        .map { CommonResource(Status.SUCCESS, it, null) }
-                        .onErrorReturn { CommonResource(Status.ERROR, null, it.message) }
+                        .map { ResultObject.Success(it) as ResultObject<List<Board>> }
+                        .onErrorReturn { ResultObject.Error(it) }
                         .toFlowable()
                         .subscribeOn(Schedulers.io()))
         }
@@ -142,7 +141,7 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
     fun getIsLoadingLiveData(): LiveData<Boolean> {
         val result = MediatorLiveData<Boolean>()
 
-        result.addSource(loadingThreadsMLD) { _ -> result.value = loadingThreadsMLD.value?:true || loadingMsgMLD.value?:true }
+        result.addSource(loadingThreadsMLD) { result.value = loadingThreadsMLD.value?:true || loadingMsgMLD.value?:true }
         result.addSource(loadingRepliesMLD) { _ -> result.value = loadingThreadsMLD.value?:true || loadingMsgMLD.value?:true }
         result.addSource(loadingMsgMLD) { _ -> result.value = loadingThreadsMLD.value?:true || loadingMsgMLD.value?:true }
         return result

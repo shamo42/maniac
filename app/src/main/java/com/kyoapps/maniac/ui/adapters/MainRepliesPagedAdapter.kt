@@ -3,7 +3,6 @@ package com.kyoapps.maniac.ui.adapters
 import android.widget.TextView
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.paging.PagedListAdapter
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
@@ -11,13 +10,12 @@ import androidx.annotation.ColorInt
 import androidx.recyclerview.widget.DiffUtil
 import android.util.Log
 import android.view.View
+import androidx.paging.PagedListAdapter
 import com.kyoapps.maniac.R
 import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
 import com.kyoapps.maniac.functions.FuncUi
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.room.entities.ReplyEnt
-import com.kyoapps.maniac.ui.MainRepliesFrag
-import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 
 

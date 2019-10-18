@@ -4,15 +4,12 @@ import android.annotation.SuppressLint
 import androidx.lifecycle.Observer
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebView
 import com.kyoapps.maniac.R
 import com.kyoapps.maniac.dagger.components.ActivityComponent
-import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
-import com.kyoapps.maniac.dagger.modules.ContextModule
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.ui.adapters.MainRepliesPagedAdapter
 import androidx.annotation.ColorInt
@@ -20,7 +17,10 @@ import android.util.TypedValue
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
 import com.kyoapps.maniac.functions.FuncParse
+
+
 class MainRepliesFrag : androidx.fragment.app.Fragment() {
 
     private lateinit var component: ActivityComponent
@@ -34,8 +34,9 @@ class MainRepliesFrag : androidx.fragment.app.Fragment() {
                               savedInstanceState: Bundle?): View? {
 
         component = DaggerActivityComponent.builder()
-                .contextModule(ContextModule(activity as Context))
+                .applicationContext(activity as Context)
                 .build()
+
 
         return inflater.inflate(R.layout.main_replies_frag, container, false)
     }
@@ -53,7 +54,7 @@ class MainRepliesFrag : androidx.fragment.app.Fragment() {
         val adapter = MainRepliesPagedAdapter(context, component as DaggerActivityComponent)
         recyclerView?.adapter = adapter
 
-        component.mainVM.repliesLiveDataPaged()?.observe(this, Observer { pagedList ->
+        component.mainVM.repliesLiveDataPaged()?.observe(viewLifecycleOwner, Observer { pagedList ->
             activity?.findViewById<SwipeRefreshLayout>(R.id.srl_replies)?.isRefreshing = false
             if (pagedList != null && pagedList.isNotEmpty()) {
                 adapter.submitList(pagedList)
@@ -75,7 +76,7 @@ class MainRepliesFrag : androidx.fragment.app.Fragment() {
             }
         })
 
-        component.mainVM.getLatestRequestItem().observe(this, Observer { requestItem ->
+        component.mainVM.getLatestRequestItem().observe(viewLifecycleOwner, Observer { requestItem ->
             requestItem?.let {
                 newThread = it.thrdid != lastRequest?.thrdid
                 if (newThread) adapter.setMarkRead()
@@ -84,7 +85,7 @@ class MainRepliesFrag : androidx.fragment.app.Fragment() {
             }
         })
 
-        activity?.findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.srl_replies)?.setOnRefreshListener {
+        activity?.findViewById<SwipeRefreshLayout>(R.id.srl_replies)?.setOnRefreshListener {
             if (lastRequest != null) component.mainVM.setRepliesRequestItem(lastRequest!!)
         }
 
@@ -107,8 +108,8 @@ class MainRepliesFrag : androidx.fragment.app.Fragment() {
             ww.settings.defaultFontSize = 14
             ww.setBackgroundColor(backGroundColor)
 
-            component.mainVM.getMessageLiveDataRx()?.observe(this, Observer { resource ->
-                resource?.data?.let{
+            component.mainVM.getMessageLiveDataRx()?.observe(viewLifecycleOwner, Observer { resource ->
+                resource?.extractData?.let{
                     val formattedText = FuncParse.formatHtmlLegacy(it, adapter.getSubjectFromId(lastRequest?.msgid?.toLong()), textColor, quoteColor, linkColor, " ")
                     ww.loadData(formattedText, "text/html; charset=utf-8", "UTF-8")
                     component.mainVM.setIsLoadingMsg(false)

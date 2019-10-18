@@ -8,12 +8,13 @@ import com.kyoapps.maniac.helpers.C_SETTINGS
 
 import dagger.Module
 import dagger.Provides
+import dagger.Reusable
 
-@Module(includes = [(ContextModule::class)])
-class DefaultSettingsModule {
+@Module
+object DefaultSettingsModule {
 
-    @CommonActivityScope
-    @Provides
+    @Provides @JvmStatic
+    @Reusable
     fun settings(context: Context): SharedPreferences {
         return context.getSharedPreferences(C_SETTINGS.DEFAULT, Context.MODE_PRIVATE)
     }

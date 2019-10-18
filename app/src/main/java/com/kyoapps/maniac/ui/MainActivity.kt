@@ -1,22 +1,19 @@
 package com.kyoapps.maniac.ui
 
-import androidx.lifecycle.Observer
 import android.content.res.Resources
 import android.os.Bundle
 import android.os.Looper
-import androidx.drawerlayout.widget.DrawerLayout
-import androidx.slidingpanelayout.widget.SlidingPaneLayout
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import android.util.Log
 import android.util.TypedValue
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
+import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
 import com.kyoapps.maniac.R
 import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
-import com.kyoapps.maniac.dagger.modules.ContextModule
 import com.kyoapps.maniac.helpers.C_SETTINGS
 import fr.castorflex.android.smoothprogressbar.SmoothProgressBar
 import io.reactivex.android.plugins.RxAndroidPlugins
@@ -30,8 +27,9 @@ class MainActivity : AppCompatActivity() {
         RxAndroidPlugins.setInitMainThreadSchedulerHandler { AndroidSchedulers.from(Looper.getMainLooper(), true) }
 
         val component = DaggerActivityComponent.builder()
-                .contextModule(ContextModule(this))
+                .applicationContext(this)
                 .build()
+
 
         setTheme(if (component.defaultSettings.getBoolean(C_SETTINGS.NIGHT_MODE, true)) R.style.AppCompat_Night else R.style.AppCompat_Day )
 
@@ -61,11 +59,10 @@ class MainActivity : AppCompatActivity() {
         (findViewById<androidx.slidingpanelayout.widget.SlidingPaneLayout>(R.id.pane_main))?.sliderFadeColor = typedValue.data
 
 
-        // Set up Action Bar
         val navController = host.navController
 
 
-        navController.addOnNavigatedListener { _, destination ->
+        navController.addOnDestinationChangedListener { controller, destination, arguments ->
             val dest: String = try {
                 resources.getResourceName(destination.id)
             } catch (e: Resources.NotFoundException) {
@@ -115,8 +112,7 @@ class MainActivity : AppCompatActivity() {
     }*/
 
     override fun onSupportNavigateUp(): Boolean {
-        return NavigationUI.navigateUp(drawerLayout,
-                Navigation.findNavController(this, R.id.main_host_frag_threads))
+        return NavigationUI.navigateUp(Navigation.findNavController(this, R.id.main_host_frag_threads), drawerLayout)
     }
 
 

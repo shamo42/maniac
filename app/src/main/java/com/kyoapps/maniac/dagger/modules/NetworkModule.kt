@@ -8,17 +8,18 @@ import java.util.concurrent.TimeUnit
 
 import dagger.Module
 import dagger.Provides
+import dagger.Reusable
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import javax.inject.Named
 
-@Module(includes = [(ContextModule::class)])
-class NetworkModule {
+@Module
+object NetworkModule {
 
 
-    @Provides
-    @CommonActivityScope
+    @Provides @JvmStatic
+    @Reusable
     @Named(RETROFIT_MANIAC)
     fun retrofitManiac(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
@@ -30,8 +31,8 @@ class NetworkModule {
     }
 
 
-    @Provides
-    @CommonActivityScope
+    @Provides @JvmStatic
+    @Reusable
     fun okHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
                 .connectTimeout(4, TimeUnit.SECONDS)
@@ -58,10 +59,9 @@ class NetworkModule {
         return File(context.cacheDir, "okhttp_cache")
     }*/
 
-    companion object {
-        private val CACHE_SIZE_MB = 80
-        const val RETROFIT_MANIAC = "retrofitManiac"
+    private val CACHE_SIZE_MB = 80
+    const val RETROFIT_MANIAC = "retrofitManiac"
 
-    }
+
 
 }

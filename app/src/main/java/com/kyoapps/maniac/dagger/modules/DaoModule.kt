@@ -8,19 +8,20 @@ import com.kyoapps.maniac.room.dao.ThreadDao
 
 import dagger.Module
 import dagger.Provides
+import dagger.Reusable
 
 
-@Module(includes = [(ContextModule::class)])
-class DaoModule {
+@Module
+object DaoModule {
 
-    @Provides
-    @CommonActivityScope
-    fun gameDao(context: Context): ThreadDao {
+    @Provides @JvmStatic
+    @Reusable
+    fun threadDao(context: Context): ThreadDao {
         return DatabaseDefault.getInstance(context)!!.threadDao()
     }
 
-    @Provides
-    @CommonActivityScope
+    @Provides @JvmStatic
+    @Reusable
     fun replyDao(context: Context): ReplyDao {
         return DatabaseDefault.getInstance(context)!!.replyDao()
     }

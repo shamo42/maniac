@@ -1,41 +1,40 @@
 package com.kyoapps.maniac.ui
 
-import androidx.lifecycle.Observer
 import android.content.Context
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import androidx.annotation.ColorInt
-import androidx.fragment.app.Fragment
-import androidx.slidingpanelayout.widget.SlidingPaneLayout
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import android.util.Log
 import android.view.*
 import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.Spinner
+import android.widget.Toast
+import androidx.annotation.ColorInt
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.slidingpanelayout.widget.SlidingPaneLayout
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.kyoapps.maniac.R
 import com.kyoapps.maniac.dagger.components.ActivityComponent
 import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
-import com.kyoapps.maniac.dagger.modules.ContextModule
 import com.kyoapps.maniac.functions.FuncFetch
 import com.kyoapps.maniac.helpers.C_SETTINGS
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
-import com.kyoapps.maniac.helpers.classes.subOnNewObsOnMain
-import com.kyoapps.maniac.ui.adapters.MainThreadsAdapter
-import com.squareup.moshi.Moshi
-import io.reactivex.disposables.CompositeDisposable
-import android.widget.ArrayAdapter
-import android.widget.Toast
 import com.kyoapps.maniac.helpers.classes.observeOnce
 import com.kyoapps.maniac.helpers.classes.pojo.Board
+import com.kyoapps.maniac.helpers.classes.subOnNewObsOnMain
+import com.kyoapps.maniac.ui.adapters.MainThreadsAdapter
 import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import io.reactivex.disposables.CompositeDisposable
 
 
-class MainThreadsFrag : androidx.fragment.app.Fragment() {
+class MainThreadsFrag : Fragment() {
 
     private lateinit var component: ActivityComponent
     private lateinit var compositeDisposable: CompositeDisposable
@@ -49,8 +48,9 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
         setHasOptionsMenu(true)
 
         component = DaggerActivityComponent.builder()
-                .contextModule(ContextModule(activity as Context))
+                .applicationContext(activity as Context)
                 .build()
+
         compositeDisposable = CompositeDisposable()
 
         return inflater.inflate(R.layout.main_threads_frag, container, false)
@@ -67,7 +67,7 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
         Log.d(TAG, "savedInstanceState == null: ${savedInstanceState == null}")
         if (savedInstanceState == null) {
             // load deeplink if present. Else load last opened
-            Toast.makeText(context, "SIS null; lastRequest: $lastRequest", Toast.LENGTH_LONG).show()
+            Toast.makeText(activity, "SIS null; lastRequest: $lastRequest", Toast.LENGTH_LONG).show()
             if (arguments?.get("mode") != null) {
                 loadDeepLink(arguments?.get("mode") as String)
             } else {
@@ -80,15 +80,15 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
             }
         } else {
             initBoardSpinner(lastRequest)
-            Toast.makeText(context, "SIS not null; lastRequest: $lastRequest", Toast.LENGTH_LONG).show()
+            Toast.makeText(activity, "SIS not null; lastRequest: $lastRequest", Toast.LENGTH_LONG).show()
         }
 
 
-        val recyclerView: androidx.recyclerview.widget.RecyclerView = view.findViewById(R.id.rv_threads)
-        recyclerView.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(activity)
+        val recyclerView: RecyclerView = view.findViewById(R.id.rv_threads)
+        recyclerView.layoutManager = LinearLayoutManager(activity)
         recyclerView.setHasFixedSize(true)
 
-        val slidingPaneLayout: androidx.slidingpanelayout.widget.SlidingPaneLayout? = activity?.findViewById(R.id.pane_main)
+        val slidingPaneLayout: SlidingPaneLayout? = activity?.findViewById(R.id.pane_main)
 
         @ColorInt val colorPressed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             context?.resources?.getColor(R.color.grey_trans_2, activity?.theme)?: Color.GRAY
@@ -98,10 +98,10 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
 
         recyclerView.adapter = adapter
 
-        component.mainVM.threadsLiveDataRx()?.observe(this, Observer { commonResource ->
-            activity?.findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.srl_threads)?.isRefreshing = false
+        component.mainVM.threadsLiveDataRx()?.observe(viewLifecycleOwner, Observer { commonResource ->
+            activity?.findViewById<SwipeRefreshLayout>(R.id.srl_threads)?.isRefreshing = false
 
-            commonResource?.data?.let { list ->
+            commonResource?.extractData?.let { list ->
                 //Log.d(TAG, "lastRequest brdid: ${lastRequest?.brdid} actual brdid ${it.first().brdid}")
                 if (list.isNotEmpty() && requestThreadsLayoutRefresh) {
                     requestThreadsLayoutRefresh = false
@@ -109,7 +109,7 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
                     if (scrollToLastPos) {
                         lastRequest?.thrdid?.let { thrdid ->
                             val pos = adapter?.getPosFromId(thrdid.toLong()) ?: 0
-                            if (pos > 0) (recyclerView.layoutManager as androidx.recyclerview.widget.LinearLayoutManager).scrollToPositionWithOffset(pos, 500)
+                            if (pos > 0) (recyclerView.layoutManager as LinearLayoutManager).scrollToPositionWithOffset(pos, 500)
                         }
                     }
                     // delay load for smoother animation
@@ -121,7 +121,7 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
             }
         })
 
-        component.mainVM.getLatestRequestItem().observe(this, Observer { requestItem ->
+        component.mainVM.getLatestRequestItem().observe(viewLifecycleOwner, Observer { requestItem ->
             requestItem?.let {
                 Log.i(TAG, "latest msgId: ${it.msgid}")
                 it.thrdid?.let {thrdid -> adapter?.setLastSelected(null, thrdid.toLong()) }
@@ -130,7 +130,7 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
         })
 
         //swipe to refresh
-        activity?.findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.srl_threads)?.setOnRefreshListener{
+        activity?.findViewById<SwipeRefreshLayout>(R.id.srl_threads)?.setOnRefreshListener{
             scrollToLastPos = false
             if (lastRequest != null) FuncFetch.fetchThreads(component.mainVM, component.mainDS, lastRequest!!, false)
         }
@@ -138,12 +138,13 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
     }
 
 
-    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
-        inflater?.inflate(R.menu.main_menu, menu)
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.main_menu, menu)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item?.itemId) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
             R.id.day_night -> {
                 component.defaultSettings.edit().putBoolean(C_SETTINGS.NIGHT_MODE, !component.defaultSettings.getBoolean(C_SETTINGS.NIGHT_MODE, true)).apply()
                 activity?.recreate()
@@ -187,8 +188,8 @@ class MainThreadsFrag : androidx.fragment.app.Fragment() {
     }
 
     private fun updateBoards(loadRequestItem: LoadRequestItem) {
-        component.mainVM.getBoardsLiveDataRx()?.observeOnce(this, Observer {
-            it?.data?.let { list ->
+        component.mainVM.getBoardsLiveDataRx()?.observeOnce(viewLifecycleOwner, Observer {
+            it?.extractData?.let { list ->
                 val spinner: Spinner? = activity?.findViewById(R.id.sp_boards)
                 setSpinner(spinner, list, loadRequestItem)
                 val moshiAdapter: JsonAdapter<List<Board>> = Moshi.Builder().build().adapter(Types.newParameterizedType(List::class.java, Board::class.java))
