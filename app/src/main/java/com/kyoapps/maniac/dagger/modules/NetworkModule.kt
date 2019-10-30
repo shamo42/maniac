@@ -18,7 +18,7 @@ import javax.inject.Named
 object NetworkModule {
 
 
-    @Provides @JvmStatic
+    @Provides
     @Reusable
     @Named(RETROFIT_MANIAC)
     fun retrofitManiac(okHttpClient: OkHttpClient): Retrofit {
@@ -31,7 +31,7 @@ object NetworkModule {
     }
 
 
-    @Provides @JvmStatic
+    @Provides
     @Reusable
     fun okHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()

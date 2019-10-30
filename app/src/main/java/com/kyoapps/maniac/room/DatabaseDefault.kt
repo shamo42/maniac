@@ -23,7 +23,6 @@ abstract class DatabaseDefault : RoomDatabase() {
             if (sInstance == null) {
                 sInstance = Room
                         .databaseBuilder(context.applicationContext, DatabaseDefault::class.java, "appdatabasekotlin")
-                        //.addMigrations(MIGRATION_28_29)
                         .fallbackToDestructiveMigration()
                         .build()
             }

@@ -11,19 +11,19 @@ import dagger.Provides
 import dagger.Reusable
 
 
-@Module
+@Module(includes = [DbModule::class])
 object DaoModule {
 
-    @Provides @JvmStatic
+    @Provides
     @Reusable
-    fun threadDao(context: Context): ThreadDao {
-        return DatabaseDefault.getInstance(context)!!.threadDao()
+    fun threadDao(databaseDefault: DatabaseDefault): ThreadDao {
+        return databaseDefault.threadDao()
     }
 
-    @Provides @JvmStatic
+    @Provides
     @Reusable
-    fun replyDao(context: Context): ReplyDao {
-        return DatabaseDefault.getInstance(context)!!.replyDao()
+    fun replyDao(databaseDefault: DatabaseDefault): ReplyDao {
+        return databaseDefault.replyDao()
     }
 
 

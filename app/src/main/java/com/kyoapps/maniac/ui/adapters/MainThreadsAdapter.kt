@@ -26,8 +26,8 @@ import com.kyoapps.maniac.room.entities.ThreadEnt
 import com.kyoapps.maniac.viewmodel.MainDS
 import com.kyoapps.maniac.viewmodel.MainVM
 
-class MainThreadsAdapter(val context: Context?, private val slidingPaneLayout: androidx.slidingpanelayout.widget.SlidingPaneLayout?, private val component: DaggerActivityComponent)
-    : ListAdapter<ThreadEnt, androidx.recyclerview.widget.RecyclerView.ViewHolder>(DIFF_CALLBACK) {
+class MainThreadsAdapter(val context: Context?, private val slidingPaneLayout: SlidingPaneLayout?, private val component: DaggerActivityComponent)
+    : ListAdapter<ThreadEnt, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
 
     private var lastSelectedId = -1L
 
@@ -46,7 +46,7 @@ class MainThreadsAdapter(val context: Context?, private val slidingPaneLayout: a
         return ThreadViewHolder(view)
     }
     
-    override fun onBindViewHolder(holder: androidx.recyclerview.widget.RecyclerView.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val threadEnt = getItem(position)
         if (threadEnt != null) {
             (holder as ThreadViewHolder).bindTo(threadEnt)
@@ -71,7 +71,7 @@ class MainThreadsAdapter(val context: Context?, private val slidingPaneLayout: a
     }
 
 
-    class ThreadViewHolder(itemView: View) : androidx.recyclerview.widget.RecyclerView.ViewHolder(itemView) {
+    class ThreadViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
         var title: TextView = itemView.findViewById(R.id.tv_thread_row_title)
         var count: TextView = itemView.findViewById(R.id.tv_thread_row_replycount)
         var view = itemView
@@ -87,7 +87,7 @@ class MainThreadsAdapter(val context: Context?, private val slidingPaneLayout: a
     }
 
     fun getPosFromId(id: Long): Int {
-        for (i in 0..(itemCount-1)) {
+        for (i in 0 until itemCount) {
             if (getItemId(i) == id) return i
         }
         return -1

@@ -12,7 +12,7 @@ import javax.inject.Named
 @Module(includes = [(NetworkModule::class)])
 object ApiManiacModule {
 
-    @Provides @JvmStatic
+    @Provides
     @Reusable
     fun maniacOldApi(@Named(RETROFIT_MANIAC) retrofit: Retrofit): ManiacApiLEGACY {
         return retrofit.create(ManiacApiLEGACY::class.java)

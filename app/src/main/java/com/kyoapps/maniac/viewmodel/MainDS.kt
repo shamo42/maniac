@@ -13,6 +13,7 @@ import com.kyoapps.maniac.room.entities.ThreadEnt
 import io.reactivex.Flowable
 import io.reactivex.Maybe
 import io.reactivex.Single
+import io.reactivex.schedulers.Schedulers
 
 
 class MainDS(private val maniacApiLEGACY: ManiacApiLEGACY, private val threadDao: ThreadDao, private val replyDao: ReplyDao) {
@@ -67,12 +68,10 @@ class MainDS(private val maniacApiLEGACY: ManiacApiLEGACY, private val threadDao
                 .map {list ->
                     val oldReplyList= replyDao.getReadTuples(thrdid).map { it.msgid }
                     list.forEach {
-                        Log.d(TAG, "test: ${oldReplyList.size}")
-
-                        Log.d(TAG, "contains msgid: ${oldReplyList.contains(it.msgid)}")
+                        //Log.d(TAG, "contains msgid: ${oldReplyList.contains(it.msgid)}")
                         if (oldReplyList.contains(it.msgid)) it.read = true
                     }
-                    list.forEach { Log.d(TAG, "read?: ${it.subject} ${it.read}")}
+                    //list.forEach { Log.d(TAG, "read?: ${it.subject} ${it.read}")}
                     replyDao.delete(thrdid)
                     replyDao.insertAll(list)
                 }

@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import com.kyoapps.maniac.api.ManiacApiLEGACY
-import com.kyoapps.maniac.dagger.scopes.CommonActivityScope
 import com.kyoapps.maniac.room.dao.ReplyDao
 import com.kyoapps.maniac.room.dao.ThreadDao
 import com.kyoapps.maniac.viewmodel.MainDS
@@ -18,7 +17,7 @@ import dagger.Reusable
 @Module(includes = [(DaoModule::class)])
 object ViewModels {
 
-    @Provides @JvmStatic
+    @Provides
     @Reusable
     fun mainVM(context: Context, dataSource: MainDS): MainVM {
         return viewModelFactory { MainVM(dataSource) }.let { factory ->
@@ -28,7 +27,7 @@ object ViewModels {
 
 
 
-    @Provides @JvmStatic
+    @Provides
     @Reusable
     fun mainDS(maniacApiLEGACY: ManiacApiLEGACY, threadDao: ThreadDao, replyDao: ReplyDao): MainDS {
         return MainDS(maniacApiLEGACY, threadDao, replyDao)

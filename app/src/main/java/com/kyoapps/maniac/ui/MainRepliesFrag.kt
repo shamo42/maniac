@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.lifecycle.Observer
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,7 +24,11 @@ import com.kyoapps.maniac.functions.FuncParse
 
 class MainRepliesFrag : androidx.fragment.app.Fragment() {
 
-    private lateinit var component: ActivityComponent
+    private val component: ActivityComponent by lazy {
+        DaggerActivityComponent.builder()
+                .applicationContext(activity as Context)
+                .build()
+    }
     private var lastRequest: LoadRequestItem? = null
     private var newThread = true
 
@@ -32,11 +37,6 @@ class MainRepliesFrag : androidx.fragment.app.Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
-
-        component = DaggerActivityComponent.builder()
-                .applicationContext(activity as Context)
-                .build()
-
 
         return inflater.inflate(R.layout.main_replies_frag, container, false)
     }
@@ -55,6 +55,7 @@ class MainRepliesFrag : androidx.fragment.app.Fragment() {
         recyclerView?.adapter = adapter
 
         component.mainVM.repliesLiveDataPaged()?.observe(viewLifecycleOwner, Observer { pagedList ->
+            Log.d(TAG, "pagedListsize: ${pagedList.size}")
             activity?.findViewById<SwipeRefreshLayout>(R.id.srl_replies)?.isRefreshing = false
             if (pagedList != null && pagedList.isNotEmpty()) {
                 adapter.submitList(pagedList)

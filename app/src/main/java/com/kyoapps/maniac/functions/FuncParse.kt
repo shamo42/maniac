@@ -325,12 +325,12 @@ object FuncParse {
 
                 "</div>" +
                 "<script lang=\"javascript\" type=\"text/javascript\">\n" +
-                "function spoiler(obj) {\n" +
-                "   if (obj.nextSibling.style.display === 'none') {\n" +
-                "       obj.nextSibling.style.display = 'inline';\n" +
+                "function spoiler(asResult) {\n" +
+                "   if (asResult.nextSibling.style.display === 'none') {\n" +
+                "       asResult.nextSibling.style.display = 'inline';\n" +
                 "   }\n" +
                 "   else {\n" +
-                "       obj.nextSibling.style.display = 'none';\n" +
+                "       asResult.nextSibling.style.display = 'none';\n" +
                 "   }\n" +
                 "}" +
                 "</script>" +

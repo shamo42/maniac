@@ -29,7 +29,7 @@
              not fit on-screen at once, the right pane is permitted to
              overlap the left.-->
 
-            <fragment
+        <fragment
                 android:id="@+id/main_host_frag_threads"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

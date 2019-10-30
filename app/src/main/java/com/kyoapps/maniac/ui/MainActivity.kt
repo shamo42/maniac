@@ -12,6 +12,7 @@ import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
+import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import com.kyoapps.maniac.R
 import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
 import com.kyoapps.maniac.helpers.C_SETTINGS
@@ -62,11 +63,11 @@ class MainActivity : AppCompatActivity() {
         val navController = host.navController
 
 
-        navController.addOnDestinationChangedListener { controller, destination, arguments ->
+        navController.addOnDestinationChangedListener { _, destination, arguments ->
             val dest: String = try {
                 resources.getResourceName(destination.id)
             } catch (e: Resources.NotFoundException) {
-                Integer.toString(destination.id)
+                destination.id.toString()
             }
             Log.d(TAG, "Navigated to $dest")
         }
@@ -117,7 +118,7 @@ class MainActivity : AppCompatActivity() {
 
 
     override fun onBackPressed() {
-        val slidingPaneLayout: androidx.slidingpanelayout.widget.SlidingPaneLayout? = findViewById(R.id.pane_main)
+        val slidingPaneLayout: SlidingPaneLayout? = findViewById(R.id.pane_main)
         if (slidingPaneLayout != null &&!slidingPaneLayout.isOpen && slidingPaneLayout.isSlideable) slidingPaneLayout.openPane()
             else super.onBackPressed()
     }

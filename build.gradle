@@ -27,10 +27,10 @@ allprojects {
 
 // Define versions in a single place
 ext {
-    dagger = '2.24'
+    dagger = '2.25.2'
 
-    rxjava = "2.2.3"
-    rxandroid = "2.1.0"
+    rxjava = "2.2.9"
+    rxandroid = "2.1.1"
     rxRelay = "2.0.0"
 
     retrofit = '2.6.2'

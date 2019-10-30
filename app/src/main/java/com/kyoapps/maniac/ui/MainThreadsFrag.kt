@@ -24,19 +24,23 @@ import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
 import com.kyoapps.maniac.functions.FuncFetch
 import com.kyoapps.maniac.helpers.C_SETTINGS
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
-import com.kyoapps.maniac.helpers.classes.observeOnce
 import com.kyoapps.maniac.helpers.classes.pojo.Board
-import com.kyoapps.maniac.helpers.classes.subOnNewObsOnMain
 import com.kyoapps.maniac.ui.adapters.MainThreadsAdapter
+import com.kyoapps.zkotlinextensions.extensions.observeOnce
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 
 
 class MainThreadsFrag : Fragment() {
 
-    private lateinit var component: ActivityComponent
+    private val component: ActivityComponent by lazy {
+        DaggerActivityComponent.builder()
+                .applicationContext(activity as Context)
+                .build()
+    }
     private lateinit var compositeDisposable: CompositeDisposable
     private var lastRequest: LoadRequestItem? = null
     private var requestThreadsLayoutRefresh = true
@@ -47,9 +51,6 @@ class MainThreadsFrag : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         setHasOptionsMenu(true)
 
-        component = DaggerActivityComponent.builder()
-                .applicationContext(activity as Context)
-                .build()
 
         compositeDisposable = CompositeDisposable()
 
@@ -90,9 +91,7 @@ class MainThreadsFrag : Fragment() {
 
         val slidingPaneLayout: SlidingPaneLayout? = activity?.findViewById(R.id.pane_main)
 
-        @ColorInt val colorPressed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            context?.resources?.getColor(R.color.grey_trans_2, activity?.theme)?: Color.GRAY
-        } else { context?.resources?.getColor(R.color.grey_trans_2)?: Color.GRAY }
+        @ColorInt val colorPressed = context?.resources?.getColor(R.color.grey_trans_2, activity?.theme)?: Color.GRAY
 
         val adapter: MainThreadsAdapter? = MainThreadsAdapter(context, slidingPaneLayout, component as DaggerActivityComponent)
 
@@ -158,7 +157,7 @@ class MainThreadsFrag : Fragment() {
         Log.i(TAG, "deeplink $deeplink")
         compositeDisposable.add(component.mainDS.parseManiacUrl(deeplink)
                 .filter { it.brdid.toInt() != -1 && it.thrdid != -1 }
-                .subOnNewObsOnMain()
+                .subscribeOn(Schedulers.io())
                 .subscribe({
                     initBoardSpinner(it)
                     loadFromDb(it)
@@ -188,7 +187,7 @@ class MainThreadsFrag : Fragment() {
     }
 
     private fun updateBoards(loadRequestItem: LoadRequestItem) {
-        component.mainVM.getBoardsLiveDataRx()?.observeOnce(viewLifecycleOwner, Observer {
+        component.mainVM.getBoardsLiveDataRx()?.observeOnce(Observer {
             it?.extractData?.let { list ->
                 val spinner: Spinner? = activity?.findViewById(R.id.sp_boards)
                 setSpinner(spinner, list, loadRequestItem)
@@ -199,7 +198,7 @@ class MainThreadsFrag : Fragment() {
     }
 
     private fun setSpinner(spinner: Spinner?, boardList: List<Board>, requestItem: LoadRequestItem?) {
-        spinner?.adapter = ArrayAdapter(activity, R.layout.main_spinner, boardList.map { it.label })
+        spinner?.adapter = ArrayAdapter(activity as Context, R.layout.main_spinner, boardList.map { it.label })
         if (boardList.map { it.brdid }.contains(requestItem?.brdid)) {
             Log.d(TAG, "spinner set true")
             spinner?.setSelection(boardList.map { it.brdid }.indexOf(requestItem?.brdid))

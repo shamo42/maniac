@@ -8,7 +8,6 @@ import com.kyoapps.maniac.room.entities.ThreadEnt
 import androidx.paging.PagedList
 import androidx.paging.LivePagedListBuilder
 import com.kyoapps.maniac.helpers.classes.commonrrxwrap.ResultObject
-import com.kyoapps.maniac.helpers.classes.commonrrxwrap.Status
 import com.kyoapps.maniac.helpers.classes.pojo.Board
 import io.reactivex.schedulers.Schedulers
 
@@ -51,10 +50,14 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
 
     fun threadsLiveDataRx(): LiveData<ResultObject<List<ThreadEnt>>>? {
         Log.d(TAG, "threadsDatabaseLiveData null ${threadsDatabaseLiveData == null}")
+
         if (threadsDatabaseLiveData == null) {
             threadsDatabaseLiveData = Transformations.switchMap(threadsDatabaseMLD) { loadRequestItem ->
                 LiveDataReactiveStreams.fromPublisher(dataSource.getThreadsFromDb(loadRequestItem.brdid)
-                        .map { ResultObject.Success(it) as ResultObject<List<ThreadEnt>> }
+                        .map {
+                            ResultObject.Success(it).mapResult{it}
+                            //ResultObject.Success(it) as ResultObject<List<ThreadEnt>>
+                        }
                         .onErrorReturn { ResultObject.Error(it) }
                         .subscribeOn(Schedulers.io()))
             }

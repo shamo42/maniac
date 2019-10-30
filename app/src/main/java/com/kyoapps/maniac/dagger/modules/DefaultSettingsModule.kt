@@ -13,7 +13,7 @@ import dagger.Reusable
 @Module
 object DefaultSettingsModule {
 
-    @Provides @JvmStatic
+    @Provides
     @Reusable
     fun settings(context: Context): SharedPreferences {
         return context.getSharedPreferences(C_SETTINGS.DEFAULT, Context.MODE_PRIVATE)
