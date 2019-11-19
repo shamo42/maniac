@@ -15,14 +15,14 @@ interface ManiacApiLEGACY {
     @GET("pxmboard.php")
     fun getThreads(
             @Query("mode") threadlist: String,
-            @Query("brdid") brdid: Short
+            @Query("brdid") brdid: Int
     ): Single<Response<ResponseBody>>
 
 
     @GET("pxmboard.php")
     fun getReplies(
             @Query("mode") thread: String,
-            @Query("brdid") brdid: Short,
+            @Query("brdid") brdid: Int,
             @Query("thrdid") thrdid: Int
     ): Single<Response<ResponseBody>>
 
@@ -30,7 +30,7 @@ interface ManiacApiLEGACY {
     @GET("pxmboard.php")
     fun getMessage(
             @Query("mode") message: String,
-            @Query("brdid") brdid: Short,
+            @Query("brdid") brdid: Int,
             @Query("msgid") msgid: Int
     ): Single<Response<ResponseBody>>
 

@@ -2,7 +2,6 @@ package com.kyoapps.maniac.ui
 
 import android.content.Context
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -10,7 +9,6 @@ import android.view.*
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
-import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -26,10 +24,8 @@ import com.kyoapps.maniac.helpers.C_SETTINGS
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.helpers.classes.pojo.Board
 import com.kyoapps.maniac.ui.adapters.MainThreadsAdapter
-import com.kyoapps.zkotlinextensions.extensions.observeOnce
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
+import com.kyoapps.zkotlinextensions.extensions.*
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 
@@ -61,14 +57,12 @@ class MainThreadsFrag : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // request (board id, thread id, message id) from last session
-        lastRequest = Moshi.Builder().build().adapter(LoadRequestItem::class.java).fromJson(
-                component.defaultSettings.getString(C_SETTINGS.PREVIOUS_REQUEST,
-                        Moshi.Builder().build().adapter(LoadRequestItem::class.java).toJson(LoadRequestItem(1, 168250, 4224606))))
+        //Log.d(TAG, component.defaultSettings.getString(C_SETTINGS.PREVIOUS_REQUEST, LoadRequestItem(1, 168250, 4224606).toJsonString()))
+        lastRequest = component.defaultSettings.getString(C_SETTINGS.PREVIOUS_REQUEST, (LoadRequestItem(1, 168250, 4224606).toJsonString()))?.toJsonObject()
 
         Log.d(TAG, "savedInstanceState == null: ${savedInstanceState == null}")
         if (savedInstanceState == null) {
             // load deeplink if present. Else load last opened
-            Toast.makeText(activity, "SIS null; lastRequest: $lastRequest", Toast.LENGTH_LONG).show()
             if (arguments?.get("mode") != null) {
                 loadDeepLink(arguments?.get("mode") as String)
             } else {
@@ -81,7 +75,6 @@ class MainThreadsFrag : Fragment() {
             }
         } else {
             initBoardSpinner(lastRequest)
-            Toast.makeText(activity, "SIS not null; lastRequest: $lastRequest", Toast.LENGTH_LONG).show()
         }
 
 
@@ -93,7 +86,7 @@ class MainThreadsFrag : Fragment() {
 
         @ColorInt val colorPressed = context?.resources?.getColor(R.color.grey_trans_2, activity?.theme)?: Color.GRAY
 
-        val adapter: MainThreadsAdapter? = MainThreadsAdapter(context, slidingPaneLayout, component as DaggerActivityComponent)
+        val adapter: MainThreadsAdapter? = MainThreadsAdapter(activity, slidingPaneLayout, component as DaggerActivityComponent, compositeDisposable)
 
         recyclerView.adapter = adapter
 
@@ -131,7 +124,11 @@ class MainThreadsFrag : Fragment() {
         //swipe to refresh
         activity?.findViewById<SwipeRefreshLayout>(R.id.srl_threads)?.setOnRefreshListener{
             scrollToLastPos = false
-            if (lastRequest != null) FuncFetch.fetchThreads(component.mainVM, component.mainDS, lastRequest!!, false)
+            if (lastRequest != null) {
+                FuncFetch.fetchThreads(component.mainVM, component.mainDS, lastRequest!!, false)
+                        .subscribe ({   }, { alert(it) })
+                        .disposeOn(compositeDisposable)
+            }
         }
 
     }
@@ -156,8 +153,10 @@ class MainThreadsFrag : Fragment() {
     private fun loadDeepLink(deeplink: String) {
         Log.i(TAG, "deeplink $deeplink")
         compositeDisposable.add(component.mainDS.parseManiacUrl(deeplink)
-                .filter { it.brdid.toInt() != -1 && it.thrdid != -1 }
+                .filter { it.brdid != -1 && it.thrdid != -1 }
                 .subscribeOn(Schedulers.io())
+
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
                     initBoardSpinner(it)
                     loadFromDb(it)
@@ -176,13 +175,16 @@ class MainThreadsFrag : Fragment() {
         Log.i(TAG, "fetchOnline brd ${requestItem.brdid} thrd ${requestItem.thrdid} msg ${requestItem.msgid}")
         if (requestItem.msgid != null) component.mainVM.setMessageRequestItem(requestItem)
         FuncFetch.fetchThreads(component.mainVM, component.mainDS, requestItem, true)
+                .subscribe ({   }, { alert(it) })
+                .disposeOn(compositeDisposable)
         FuncFetch.fetchReplies(component.mainVM, component.mainDS, requestItem)
+                .subscribe ({   }, { alert(it) })
+                .disposeOn(compositeDisposable)
     }
 
     private fun initBoardSpinner(requestItem: LoadRequestItem?) {
         val spinner: Spinner? = activity?.findViewById(R.id.sp_boards)
-        val moshiAdapter: JsonAdapter<List<Board>> = Moshi.Builder().build().adapter(Types.newParameterizedType(List::class.java, Board::class.java))
-        val oldList = moshiAdapter.fromJson(component.defaultSettings.getString(C_SETTINGS.BOARDS, moshiAdapter.toJson(ArrayList(0))))
+        val oldList = component.defaultSettings.getString(C_SETTINGS.BOARDS, emptyList<Board>().toJsonString())?.toJsonObjectList<Board>()
         setSpinner(spinner, oldList!!, requestItem)
     }
 
@@ -191,8 +193,7 @@ class MainThreadsFrag : Fragment() {
             it?.extractData?.let { list ->
                 val spinner: Spinner? = activity?.findViewById(R.id.sp_boards)
                 setSpinner(spinner, list, loadRequestItem)
-                val moshiAdapter: JsonAdapter<List<Board>> = Moshi.Builder().build().adapter(Types.newParameterizedType(List::class.java, Board::class.java))
-                component.defaultSettings.edit().putString(C_SETTINGS.BOARDS, moshiAdapter.toJson(list)).apply()
+                component.defaultSettings.edit().putString(C_SETTINGS.BOARDS, list.toJsonString()).apply()
             }
         })
     }
@@ -219,7 +220,9 @@ class MainThreadsFrag : Fragment() {
                     val loadThreadsRequest = LoadRequestItem(boardList[position].brdid, null, null)
 
                     FuncFetch.fetchThreads(component.mainVM, component.mainDS, loadThreadsRequest, true)
-                    component.mainVM.setThreadsRequestItem(loadThreadsRequest)
+                            .subscribe ({  component.mainVM.setThreadsRequestItem(loadThreadsRequest) }, { alert(it) })
+                            .disposeOn(compositeDisposable)
+
                 }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) { }
@@ -229,13 +232,13 @@ class MainThreadsFrag : Fragment() {
 
     override fun onDetach() {
         compositeDisposable.clear()
-        FuncFetch.clearDisposables()
         super.onDetach()
     }
 
     override fun onStop() {
-        component.defaultSettings.edit().putString(C_SETTINGS.PREVIOUS_REQUEST,
-                Moshi.Builder().build().adapter(LoadRequestItem::class.java).toJson(lastRequest)).apply()
+        lastRequest?.also { request ->
+            component.defaultSettings.edit().putString(C_SETTINGS.PREVIOUS_REQUEST, request.toJsonString()).apply()
+        }
         super.onStop()
     }
 

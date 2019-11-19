@@ -1,5 +1,6 @@
 package com.kyoapps.maniac.ui.adapters
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
@@ -14,19 +15,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import android.widget.Toast
 import com.kyoapps.maniac.R
 import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
 
 import com.kyoapps.maniac.functions.FuncFetch
 import com.kyoapps.maniac.functions.FuncUi
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
-import com.kyoapps.maniac.helpers.classes.ThreadDisplaySettingsItem
 import com.kyoapps.maniac.room.entities.ThreadEnt
-import com.kyoapps.maniac.viewmodel.MainDS
-import com.kyoapps.maniac.viewmodel.MainVM
+import com.kyoapps.zkotlinextensions.extensions.alert
+import com.kyoapps.zkotlinextensions.extensions.disposeOn
+import io.reactivex.disposables.CompositeDisposable
 
-class MainThreadsAdapter(val context: Context?, private val slidingPaneLayout: SlidingPaneLayout?, private val component: DaggerActivityComponent)
+class MainThreadsAdapter(val context: Context?, private val slidingPaneLayout: SlidingPaneLayout?, private val component: DaggerActivityComponent, val compositeDisposable: CompositeDisposable)
     : ListAdapter<ThreadEnt, RecyclerView.ViewHolder>(DIFF_CALLBACK) {
 
     private var lastSelectedId = -1L
@@ -62,6 +62,8 @@ class MainThreadsAdapter(val context: Context?, private val slidingPaneLayout: S
                 if (it.thrdid.toLong() != lastSelectedId) {
                     setLastSelected(holder, it.thrdid.toLong())
                     FuncFetch.fetchReplies(component.mainVM, component.mainDS, LoadRequestItem(it.brdid, it.thrdid, null))
+                            .subscribe ({   }, { t: Throwable ->  (context as Activity?)?.alert(t)  })
+                            .disposeOn(compositeDisposable)
                     component.mainVM.setRepliesRequestItem(LoadRequestItem(it.brdid, it.thrdid, null))
                     //Toast.makeText(context, "click; request: ${LoadRequestItem(it.brdid, it.thrdid, null)}", Toast.LENGTH_SHORT).show()
                 }

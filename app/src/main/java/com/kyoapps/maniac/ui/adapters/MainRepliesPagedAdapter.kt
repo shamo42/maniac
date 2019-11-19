@@ -16,7 +16,6 @@ import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
 import com.kyoapps.maniac.functions.FuncUi
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.room.entities.ReplyEnt
-import io.reactivex.schedulers.Schedulers
 
 
 class MainRepliesPagedAdapter(context: Context?, private val component: DaggerActivityComponent):
@@ -30,8 +29,6 @@ class MainRepliesPagedAdapter(context: Context?, private val component: DaggerAc
     @ColorInt private val textColorNotSelectedRead = FuncUi.getAttrColorData(context, R.attr.textColorDim)
     private val textBackgroundUnread = FuncUi.makeColorStateList(Color.WHITE, Color.WHITE, textColorNotSelectedUnread)
     private val textBackgroundRead = FuncUi.makeColorStateList(Color.WHITE, Color.WHITE, textColorNotSelectedRead)
-
-    private val toBeMarkedReadList: ArrayList<ReplyEnt> = ArrayList()
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReplyViewHolder {
@@ -52,20 +49,13 @@ class MainRepliesPagedAdapter(context: Context?, private val component: DaggerAc
             holder.view.isSelected = lastSelectedMsgId == getItemId(position)
         }
 
-        holder.view.setOnClickListener { _->
-            getItem(holder.adapterPosition)?.let {
-                Log.i(TAG, "MainRepliesPagedAdapter read thrdid ${it.thrdid} msgid ${it.msgid}")
-                if (it.msgid.toLong() != lastSelectedMsgId) {
+        holder.view.setOnClickListener {
+            getItem(holder.adapterPosition)?.let { replyEnt ->
+                Log.i(TAG, "MainRepliesPagedAdapter read thrdid ${replyEnt.thrdid} msgid ${replyEnt.msgid}")
+                if (replyEnt.msgid.toLong() != lastSelectedMsgId) {
 
-                    /*component.mainDS.markReplyReadDb(it) //causes weird jumps in list probably causes by paging and list update
-                         .subscribeOn(Schedulers.io())
-                         .subscribe({i -> Log.d(TAG, "markReplyReadDb $i")}, { t-> t.printStackTrace()})*/
-
-                    it.read = true
-                    toBeMarkedReadList.add(it)
-
-                    setLastSelected(holder, it.msgid.toLong())
-                    component.mainVM.setMessageRequestItem(LoadRequestItem(it.brdid, it.thrdid, it.msgid))
+                    setLastSelected(holder, replyEnt.msgid.toLong())
+                    component.mainVM.setMessageRequestItem(LoadRequestItem(replyEnt.brdid, replyEnt.thrdid, replyEnt.msgid))
 
                 }
             }
@@ -90,7 +80,7 @@ class MainRepliesPagedAdapter(context: Context?, private val component: DaggerAc
 
 
     fun getPosFromId(id: Long): Int {
-        for (i in 0..(itemCount-1)) {
+        for (i in 0 until itemCount) {
             if (getItemId(i) == id) Log.d(TAG, "getItemId: ${getItemId(i)} id: $id")
             if (getItemId(i) == id) return i
         }
@@ -114,16 +104,6 @@ class MainRepliesPagedAdapter(context: Context?, private val component: DaggerAc
             lastSelectedMsgId = id
             // refresh row to show it selected if (holder == null)
             if (holder == null) notifyItemChanged(getPosFromId(lastSelectedMsgId))
-        }
-    }
-
-    fun setMarkRead() {
-        if (toBeMarkedReadList.isNotEmpty()) {
-            component.mainDS.markRepliesReadDb(ArrayList(toBeMarkedReadList))
-                    .subscribeOn(Schedulers.io())
-                    .subscribe({ Log.d(TAG, "marked read $it") }, { Log.e(TAG, it.localizedMessage, it) })
-                    .dispose()
-            toBeMarkedReadList.clear()
         }
     }
 

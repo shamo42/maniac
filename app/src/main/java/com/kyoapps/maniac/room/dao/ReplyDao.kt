@@ -17,11 +17,16 @@ interface ReplyDao {
     @Update
     fun updateAll(replyEntList: List<ReplyEnt>): Int
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(replyEnt: ReplyEnt): Long
 
     @Insert
     fun insertAll(replyEntList: List<ReplyEnt>)
+
+
+
+    @Query("SELECT * FROM $TABLE_NAME WHERE $COLUMN_THRDID = :thrdid AND $COLUMN_MSGID = :msgId")
+    fun getReply(thrdid: Int, msgId: Int): ReplyEnt
 
     @Query("SELECT $COLUMN_MSGID FROM $TABLE_NAME WHERE $COLUMN_THRDID = :thrdid AND $COLUMN_READ")
     fun getReadTuples(thrdid: Int): List<ReplyEntReadTuple>

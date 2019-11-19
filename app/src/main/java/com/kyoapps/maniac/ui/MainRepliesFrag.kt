@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.kyoapps.maniac.dagger.components.DaggerActivityComponent
 import com.kyoapps.maniac.functions.FuncParse
+import com.kyoapps.maniac.helpers.classes.commonrrxwrap.ResultObject
+import com.kyoapps.zkotlinextensions.extensions.alert
 
 
 class MainRepliesFrag : androidx.fragment.app.Fragment() {
@@ -80,7 +82,6 @@ class MainRepliesFrag : androidx.fragment.app.Fragment() {
         component.mainVM.getLatestRequestItem().observe(viewLifecycleOwner, Observer { requestItem ->
             requestItem?.let {
                 newThread = it.thrdid != lastRequest?.thrdid
-                if (newThread) adapter.setMarkRead()
                 lastRequest = it
                 if (it.msgid != null)  adapter.setLastSelected(null, it.msgid.toLong())
             }
@@ -110,20 +111,18 @@ class MainRepliesFrag : androidx.fragment.app.Fragment() {
             ww.setBackgroundColor(backGroundColor)
 
             component.mainVM.getMessageLiveDataRx()?.observe(viewLifecycleOwner, Observer { resource ->
-                resource?.extractData?.let{
-                    val formattedText = FuncParse.formatHtmlLegacy(it, adapter.getSubjectFromId(lastRequest?.msgid?.toLong()), textColor, quoteColor, linkColor, " ")
-                    ww.loadData(formattedText, "text/html; charset=utf-8", "UTF-8")
-                    component.mainVM.setIsLoadingMsg(false)
+                when (resource) {
+                    is ResultObject.Success -> {
+                        val formattedText = FuncParse.formatHtmlLegacy(resource.data, adapter.getSubjectFromId(lastRequest?.msgid?.toLong()), textColor, quoteColor, linkColor, " ")
+                        ww.loadData(formattedText, "text/html; charset=utf-8", "UTF-8")
+                    }
+                    is ResultObject.Error -> alert(resource.throwable)
                 }
             })
         }
     }
 
 
-    override fun onDetach() {
-        (recyclerView?.adapter as MainRepliesPagedAdapter).setMarkRead()
-        super.onDetach()
-    }
 
     companion object {
         private const val TAG = "MainRepliesFrag"

@@ -9,6 +9,7 @@ import androidx.paging.PagedList
 import androidx.paging.LivePagedListBuilder
 import com.kyoapps.maniac.helpers.classes.commonrrxwrap.ResultObject
 import com.kyoapps.maniac.helpers.classes.pojo.Board
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 
 
@@ -35,7 +36,7 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
 
     // 1. Threads
     fun setThreadsRequestItem(loadRequestItem: LoadRequestItem) {
-        Log.d(TAG, "loadRequestItem: ${loadRequestItem.toString()}")
+        Log.d(TAG, "loadRequestItem: $loadRequestItem")
         this.threadsDatabaseMLD.value = loadRequestItem
     }
 
@@ -104,12 +105,17 @@ class MainVM(private val dataSource: MainDS) : ViewModel() {
     fun getMessageLiveDataRx(): LiveData<ResultObject<String>>? {
         Log.d(TAG, "messageFetchLiveData null ${messageFetchLiveData == null}")
         if (messageFetchLiveData == null) {
-            messageFetchLiveData = Transformations.switchMap(messageFetchMLD) { loadItem ->
-                LiveDataReactiveStreams.fromPublisher(dataSource.getMessage(loadItem.brdid, loadItem.msgid!!)
+            messageFetchLiveData = Transformations.switchMap(messageFetchMLD) { loadRequestItem ->
+                LiveDataReactiveStreams.fromPublisher(dataSource.getMessage(loadRequestItem.brdid, loadRequestItem.msgid!!)
+                        .subscribeOn(Schedulers.io())
                         .map { ResultObject.Success(it) as ResultObject<String> }
+                        .doOnSuccess { dataSource.markReplyReadDb(loadRequestItem) }
+                        .observeOn(AndroidSchedulers.mainThread())
                         .onErrorReturn { ResultObject.Error(it) }
+                        .doFinally { setIsLoadingMsg(false) }
                         .toFlowable()
-                        .subscribeOn(Schedulers.io()))
+                )
+
             }
         }
         return messageFetchLiveData

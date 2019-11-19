@@ -19,14 +19,12 @@ abstract class DatabaseDefault : RoomDatabase() {
     companion object {
         private var sInstance: DatabaseDefault? = null
 
-        @Synchronized fun getInstance(context: Context): DatabaseDefault? {
-            if (sInstance == null) {
-                sInstance = Room
-                        .databaseBuilder(context.applicationContext, DatabaseDefault::class.java, "appdatabasekotlin")
-                        .fallbackToDestructiveMigration()
-                        .build()
-            }
-            return sInstance
+        @Synchronized fun getInstance(context: Context): DatabaseDefault {
+            return sInstance?: Room
+                    .databaseBuilder(context.applicationContext, DatabaseDefault::class.java, "appdatabasekotlin")
+                    .fallbackToDestructiveMigration()
+                    .build()
+                    .also { sInstance = it }
         }
 
 

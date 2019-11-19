@@ -20,7 +20,7 @@ interface ThreadDao {
 
 
     @Query("SELECT * FROM $TABLE_NAME WHERE $COLUMN_BRDID = :brdid ORDER BY $COLUMN_FETCH_TIME")
-    fun getThreadsOrderedRx(brdid: Short): Flowable<List<ThreadEnt>>
+    fun getThreadsOrderedRx(brdid: Int): Flowable<List<ThreadEnt>>
 
     @Insert
     fun insert(gameEnt: ThreadEnt): Long
@@ -42,14 +42,14 @@ interface ThreadDao {
     fun deleteAll()
 
     @Query("DELETE FROM $TABLE_NAME WHERE $COLUMN_BRDID = :brdid")
-    fun delete(brdid: Short)
+    fun delete(brdid: Int)
 
 
     @Query("SELECT COUNT(*) FROM $TABLE_NAME")
     fun count(): Int
 
     @Query("SELECT COUNT(*) FROM $TABLE_NAME WHERE $COLUMN_BRDID = :brdid")
-    fun count(brdid: Short): Int
+    fun count(brdid: Int): Int
 
 
     

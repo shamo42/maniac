@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
         // Set up SlidingPane fade color
         val typedValue = TypedValue()
         theme.resolveAttribute(R.attr.colorPrimary, typedValue, true)
-        (findViewById<androidx.slidingpanelayout.widget.SlidingPaneLayout>(R.id.pane_main))?.sliderFadeColor = typedValue.data
+        (findViewById<SlidingPaneLayout>(R.id.pane_main))?.sliderFadeColor = typedValue.data
 
 
         val navController = host.navController

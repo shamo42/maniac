@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "reply")
 data class ReplyEnt(
 
-        val brdid: Short,
+        val brdid: Int,
         val thrdid: Int,
         @PrimaryKey
         val msgid: Int,

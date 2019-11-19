@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "thread")
 data class ThreadEnt(
-        val brdid: Short,
+        val brdid: Int,
         @PrimaryKey
         val thrdid: Int,
         val subject: String,

@@ -30,7 +30,7 @@ object DbModule {
     @Provides
     @CommonActivityScope
     fun getDB(context: Context): DatabaseDefault {
-        return DatabaseDefault.getInstance(context)!!
+        return DatabaseDefault.getInstance(context)
     }
 
 }

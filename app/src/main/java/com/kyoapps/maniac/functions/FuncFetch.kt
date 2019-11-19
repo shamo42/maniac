@@ -1,49 +1,35 @@
 package com.kyoapps.maniac.functions
 
-import android.util.Log
 import com.kyoapps.maniac.helpers.classes.LoadRequestItem
 import com.kyoapps.maniac.viewmodel.MainDS
 import com.kyoapps.maniac.viewmodel.MainVM
-import com.kyoapps.zkotlinextensions.extensions.disposeOn
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
 object FuncFetch {
 
-    private val compositeDisposable: CompositeDisposable = CompositeDisposable()
-
     // optional delay loading for faster start and smoother animations
-    fun fetchThreads(mainVM: MainVM, mainDS: MainDS, loadRequestItem: LoadRequestItem, delayLoading: Boolean) {
+    fun fetchThreads(mainVM: MainVM, mainDS: MainDS, loadRequestItem: LoadRequestItem, delayLoading: Boolean): Single<Boolean> {
         mainVM.setIsLoadingThreads(true)
-        mainDS.fetchThreadsIntoDb(loadRequestItem.brdid)
+        return mainDS.fetchThreadsIntoDb(loadRequestItem.brdid)
                 .delay(if (delayLoading) 2 else 0, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    result -> Log.i(TAG, "fetchThreads success $result")
-                    mainVM.setIsLoadingThreads(false)
-                },  {Log.e(TAG, it.localizedMessage, it)})
-               .disposeOn(compositeDisposable)
+                .doFinally { mainVM.setIsLoadingThreads(false) }
+
     }
 
-    fun fetchReplies(mainVM: MainVM, mainDS: MainDS, loadRequestItem: LoadRequestItem) {
+    fun fetchReplies(mainVM: MainVM, mainDS: MainDS, loadRequestItem: LoadRequestItem): Single<Boolean> {
         mainVM.setIsLoadingReplies(true)
-        if (loadRequestItem.thrdid != null && loadRequestItem.thrdid != -1) {
+        return if (loadRequestItem.thrdid != null && loadRequestItem.thrdid != -1) {
             mainDS.fetchRepliesIntoDb(loadRequestItem.brdid, loadRequestItem.thrdid)
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe({
-                        result -> Log.i(TAG, "fetchReplies success $result")
-                        mainVM.setIsLoadingReplies(false)
-                    },  {Log.e(TAG, it.localizedMessage, it)})
-                    .disposeOn(compositeDisposable)
-
-        }
+                    .doFinally { mainVM.setIsLoadingReplies(false) }
+        } else Single.error(Throwable("thread id invalid: ${loadRequestItem.thrdid}"))
     }
-
-    fun clearDisposables() { compositeDisposable.clear() }
 
     private const val TAG = "FuncFetch"
 

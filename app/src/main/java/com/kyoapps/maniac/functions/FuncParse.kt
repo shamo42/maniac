@@ -13,7 +13,7 @@ import android.text.Html
 object FuncParse {
 
     // bad code. use new api asap
-    fun parseThreadsLegacy(response: Response<ResponseBody>, brdid: Short): List<ThreadEnt> {
+    fun parseThreadsLegacy(response: Response<ResponseBody>, brdid: Int): List<ThreadEnt> {
 
         val timeMs = System.currentTimeMillis()
 
@@ -86,7 +86,7 @@ object FuncParse {
     }
 
     // bad code. use new api asap
-    fun parseRepliesLegacy(response: Response<ResponseBody>, brdid: Short, thrdid: Int): List<ReplyEnt> {
+    fun parseRepliesLegacy(response: Response<ResponseBody>, brdid: Int, thrdid: Int): List<ReplyEnt> {
         val timeMs = System.currentTimeMillis()
 
         val resultList: ArrayList<ReplyEnt> = ArrayList()
@@ -253,7 +253,7 @@ object FuncParse {
                 val subStringStart = it.substring(start + 39)
                 val endId = subStringStart.indexOf("\">")
                 if (endId != -1) {
-                    val brdid = Integer.parseInt(subStringStart.substring(0, endId)).toShort()
+                    val brdid = Integer.parseInt(subStringStart.substring(0, endId))
                     val label = Html.fromHtml(subStringStart.substring(endId + 2, subStringStart.indexOf("</a>"))).toString()
                     resultList.add(Board(brdid, label))
                 }
